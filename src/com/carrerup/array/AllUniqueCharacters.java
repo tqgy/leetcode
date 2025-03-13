@@ -37,10 +37,13 @@ public class AllUniqueCharacters {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// Test cases
-		char[] s = null;
-		System.out.println(isAllUniqueChars(s));
-
+		// Test cases for differernt inputs and verify the output
+		System.out.println(isAllUniqueChars(null));
+		System.out.println(isAllUniqueChars(new char[]{}));
+		System.out.println(isAllUniqueChars(new char[]{'a', 'b', 'c'}));
+		System.out.println(isAllUniqueChars(new char[]{'a', 'b', 'a'}));
+		System.out.println(isAllUniqueChars(new char[]{'1', '2', '3', '4'}));
+		System.out.println(isAllUniqueChars(new char[]{'1', '2', '3', '1'}));
 	}
 
 }
