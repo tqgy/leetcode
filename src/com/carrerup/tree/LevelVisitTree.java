@@ -3,7 +3,7 @@ package com.carrerup.tree;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import com.guyu.carrerup.tree.MaxDistance.TreeNode;
+import com.carrerup.tree.MaxDistance.TreeNode;
 
 public class LevelVisitTree {
 

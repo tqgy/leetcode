@@ -2,7 +2,7 @@ package com.carrerup.tree;
 
 import java.util.ArrayList;
 
-import com.guyu.carrerup.tree.NearestFatherNode.TreeNode;
+import com.carrerup.tree.NearestFatherNode.TreeNode;
 
 public class SumPath {
 
@@ -16,13 +16,13 @@ public class SumPath {
 	 * thus far on each path. When we find the sum, we print the current path.
 	 * Note that we don’t stop just because we found the sum. Why? Because we
 	 * could have the following path (assume we are looking for the sum 5): 2 +
-	 * 3 + �? + 3 + 1 + 2. If we stopped once we hit 2 + 3, we’d miss several
+	 * 3 + �? + 3 + 1 + 2. If we stopped once we hit 2 + 3, we’d miss several
 	 * paths (2 + 3 + -4 + 3 + 1 and 3 + -4 + 3 + 1 + 2). So, we keep going
 	 * along every possible path. Now, what if the path can start anywhere? In
-	 * that case, we make a small modification. On every node, we look “up�?to
+	 * that case, we make a small modification. On every node, we look “up�?to
 	 * see if we’ve found the sum. That is—rather than asking “does this node
-	 * start a path with the sum?,�?we ask “does this node complete a path with
-	 * the sum?�?
+	 * start a path with the sum?,�?we ask “does this node complete a path with
+	 * the sum?�?
 	 */
 	void findSum(TreeNode head, int sum, ArrayList<Integer> buffer, int level) {
 		if (head == null)

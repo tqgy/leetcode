@@ -37,9 +37,10 @@ public class AllUniqueCharacters {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		// Test cases
 		char[] s = null;
 		System.out.println(isAllUniqueChars(s));
+
 	}
 
 }
