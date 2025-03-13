@@ -58,8 +58,10 @@ public class BlancedParathesis {
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+		// Test cases
+		BlancedParathesis bp = new BlancedParathesis();
+		System.out.println(bp.balance(")))(((".toCharArray()));
+		printPar(3);
 	}
 
 }
