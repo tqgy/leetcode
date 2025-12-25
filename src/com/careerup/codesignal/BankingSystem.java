@@ -1,4 +1,4 @@
-package com.carrerup.pratice;
+package com.careerup.codesignal;
 
 import java.util.*;
 import java.util.*;

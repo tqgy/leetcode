@@ -107,6 +107,7 @@ public class Practice {
 			System.out.println(a[i]);
 		}
 		TreeMap<Integer, Integer> treeMap = new TreeMap<>();
+		treeMap.higherKey(null);
 		System.out.println("---- : " + treeMap.floorKey(1));
 		treeMap.put(3, 2);
 		treeMap.put(5, 4);

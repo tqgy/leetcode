@@ -1,4 +1,5 @@
 package com.carrerup.pratice;
+
 import java.util.*;
 
 public class ExpressionEvaluator {
@@ -28,14 +29,13 @@ public class ExpressionEvaluator {
         return compute(target, values, map, seen);
     }
 
-    private static Integer compute(String variable,
-                                   Map<String, Integer> values,
-                                   Map<String, List<String>> map,
-                                   Set<String> seen) {
+    private static Integer compute(String variable, Map<String, Integer> values, Map<String, List<String>> map,
+            Set<String> seen) {
         // If variable is a number
         try {
             return Integer.parseInt(variable);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
 
         if (values.containsKey(variable)) {
             return values.get(variable);
@@ -55,7 +55,8 @@ public class ExpressionEvaluator {
             int sign = signToken.equals("+") ? 1 : -1;
 
             Integer subVal = compute(eq.get(i), values, map, seen);
-            if (subVal == null) return null;
+            if (subVal == null)
+                return null;
             val += sign * subVal;
         }
 
@@ -64,15 +65,13 @@ public class ExpressionEvaluator {
     }
 
     public static void main(String[] args) {
-        List<List<String>> inputs = Arrays.asList(
-            Arrays.asList("T1 = 1", "T2 = T3", "T3 = T1"),
-            Arrays.asList("T1 = 1", "T2 = 2 + T4", "T3 = T1 - 4", "T4 = T1 + T3"),
-            Arrays.asList("T1 = 1", "T2 = 2 + T4", "T3 = T1 - 4", "T4 = T1 + T3"),
-            Arrays.asList("T1 = 1", "T2 = 2 + T4", "T3 = T1 - 4", "T4 = T1 + T3"),
-            Arrays.asList("T1 = T2", "T2 = T1")
-        );
+        List<List<String>> inputs = Arrays.asList(Arrays.asList("T1 = 1", "T2 = T3", "T3 = T1"),
+                Arrays.asList("T1 = 1", "T2 = 2 + T4", "T3 = T1 - 4", "T4 = T1 + T3"),
+                Arrays.asList("T1 = 1", "T2 = 2 + T4", "T3 = T1 - 4", "T4 = T1 + T3"),
+                Arrays.asList("T1 = 1", "T2 = 2 + T4", "T3 = T1 - 4", "T4 = T1 + T3"),
+                Arrays.asList("T1 = T2", "T2 = T1"));
 
-        String[] targets = {"T2", "T2", "T3", "T4", "T2"};
+        String[] targets = { "T2", "T2", "T3", "T4", "T2" };
 
         for (int i = 0; i < inputs.size(); i++) {
             Integer result = solve(targets[i], inputs.get(i));
