@@ -68,4 +68,40 @@ class MinShoppers {
 
         return ((double) totalWait) / orders.length;
     }
+
+    public double averageWaitingTime(int[][] customers) {
+        if(customers == null || customers.length == 0 || customers[0].length == 0) 
+            return 0.0;
+        double total = 0;
+        int preFinish = 0;
+        for(int i = 0; i < customers.length; i++){
+            int[] cur = customers[i];
+            int arrive = cur[0];
+            int cost = cur[1];
+            int start = Math.max(arrive, preFinish);
+            preFinish = start + cost;
+            total += preFinish - arrive;
+        }
+        return total/customers.length;
+    }
+
+    public static void main(String[] args) {
+        MinShoppers solver = new MinShoppers();
+
+        int[][] orders1 = { {3, 0}, {2, 1}, {5, 3} };
+        double k1 = 3.0;
+        System.out.println(solver.getMinShoppers(orders1, k1)); // Expected output: 2
+
+        int[][] orders2 = { {10, 0}, {10, 2}, {10, 4}, {10, 6} };
+        double k2 = 15.0;
+        System.out.println(solver.getMinShoppers(orders2, k2)); // Expected output: 2
+
+        int[][] orders3 = { {5, 0}, {5, 1}, {5, 2}, {5, 3} };
+        double k3 = 4.0;
+        System.out.println(solver.getMinShoppers(orders3, k3)); // Expected output: -1
+
+        // test averageWaitingTime
+        int[][] customers = {{1,2},{2,5},{4,3}};
+        System.out.println(solver.averageWaitingTime(customers)); // Expected output: 5.0
+    }
 }

@@ -1,22 +1,7 @@
 package com.carrerup.pratice;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Practice {
@@ -28,18 +13,82 @@ public class Practice {
 	}
 
 	public static int hammingDistance(int x, int y) {
-			int cnt = 0;
-			while(x != 0 || y != 0){
-				int xa = x & 1;
-				int ya = y & 1;
-				if(xa != ya){
-					cnt++;
-				}
-				x = x>>1;
-				y = y>>1;   
+		int cnt = 0;
+		while (x != 0 || y != 0) {
+			int xa = x & 1;
+			int ya = y & 1;
+			if (xa != ya) {
+				cnt++;
 			}
-			return cnt;
+			x = x >> 1;
+			y = y >> 1;
 		}
+		return cnt;
+	}
+
+	public static int widthOfBinaryTree(TreeNode root) {
+		// bfs, null node also add as null node, calculate each level, first non null
+		// node and last non null node
+		int max = 0;
+		Queue<TreeNode> queue = new LinkedList<>();
+		queue.offer(root);
+		while (!queue.isEmpty()) {
+			int size = queue.size();
+			ArrayList<TreeNode> tQueue = new ArrayList<>();
+			boolean nonNull = false;
+			for (int i = 0; i < size; i++) {
+				TreeNode cur = queue.poll();
+				if (cur != null) {
+					nonNull = true;
+					tQueue.add(cur.left);
+					tQueue.add(cur.right);
+				} else {
+					tQueue.add(null);
+					tQueue.add(null);
+				}
+			}
+			if (!nonNull)
+				return max;
+			int l = 0, r = tQueue.size() - 1;
+			while (tQueue.get(l) == null && l < r)
+				l++;
+			while (tQueue.get(r) == null && l < r)
+				r--;
+
+			max = Math.max(max, r - l + 1);
+
+			for (int i = 0; i < tQueue.size(); i++) {
+				queue.offer(tQueue.get(i));
+			}
+		}
+		return max;
+	}
+
+	public static void printLevel(TreeNode root) {
+		if (root == null) {
+			return;
+		}
+		LinkedList queue = new LinkedList();
+		queue.add(root);
+		TreeNode end = root;
+		int num = 0;
+		while (queue.size() != 0) {
+			if (root.left != null) {
+				queue.add(root.left);
+			}
+			if (root.right != null) {
+				queue.add(root.right);
+			}
+			num++;
+			root = (TreeNode) queue.poll();
+			if (root == end) {
+				System.out.println(num);
+				end = (TreeNode) queue.getLast();
+				num = 0;
+			}
+
+		}
+	}
 
 	/**
 	 * @param args
@@ -72,15 +121,15 @@ public class Practice {
 		for (Map.Entry<Character, Integer> entry : indexs.entrySet()) {
 			System.out.println(entry.getKey() + " : " + entry.getValue());
 		}
-        char c = 'a';
+		char c = 'a';
 		Character.isLetter(c);
 		PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> b[1] - a[1]);
 		String s1 = String.valueOf('a');
-		s1 = String.valueOf(new char[]{'a', 'b'});
+		s1 = String.valueOf(new char[] { 'a', 'b' });
 		Set<Character> set = new HashSet<>(Arrays.asList('a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'));
 		StringBuilder prefix = new StringBuilder();
-		prefix.append(c);                         // 添加
-        prefix.deleteCharAt(prefix.length() - 1); // 删除
+		prefix.append(c); // 添加
+		prefix.deleteCharAt(prefix.length() - 1); // 删除
 		List<Integer> values = new ArrayList<>();
 		values.add(1);
 		values.remove(values.size() - 1);
@@ -95,10 +144,10 @@ public class Practice {
 		List<Integer> res = new ArrayList<>();
 		Queue<TreeNode> queue = new LinkedList<>();
 		Stack<Integer> stack = new Stack<>();
-        ArrayList<TreeNode> tQueue = new ArrayList<>();
+		ArrayList<TreeNode> tQueue = new ArrayList<>();
 		tQueue.add(new TreeNode());
 		tQueue.removeIf(a -> a.value == 0);
-		tQueue.stream().anyMatch(a->a.value == 1);
+		tQueue.stream().anyMatch(a -> a.value == 1);
 		int[] arr = new int[10];
 		String s = "adsf@dfs@sdf@";
 		String[] a = s.split("@");
@@ -118,103 +167,25 @@ public class Practice {
 		treeSet.add(3);
 		System.out.println("~~~ : " + treeSet.floor(1));
 		System.out.println("~~~ : " + treeSet.floor(4));
-		
-		for(Map.Entry<Integer, Integer> entry : treeMap.entrySet()){
+
+		for (Map.Entry<Integer, Integer> entry : treeMap.entrySet()) {
 			System.out.println(entry.getKey() + " : " + entry.getValue());
 		}
 
 		treeMap.remove(3);
-		for(Map.Entry<Integer, Integer> entry : treeMap.entrySet()){
+		for (Map.Entry<Integer, Integer> entry : treeMap.entrySet()) {
 			System.out.println(entry.getKey() + " : " + entry.getValue());
 		}
-
-	
-	}
-
-	private static class Account {
-        private String accountId;
-
-        public int getBalance() {
-            return balance;
-        }
-
-        private int balance;
-        public Account(String accountId){
-            this.accountId = accountId;
-            this.balance = 0;
-        }
-    }
-    private Map<String, Account> map;
-
-	public List<String> topActivity(int n){
-        return map.values().stream().sorted((a, b) -> {
-            if (a.balance == b.balance){
-                return a.accountId.compareTo(b.accountId);
-            } else {
-                return b.balance - a.balance;
-            }
-		}).limit(n).map(a -> a.getBalance()+"").collect(Collectors.toList());
-    }
-
-public static int widthOfBinaryTree(TreeNode root) {
-        // bfs, null node also add as null node, calculate each level, first non null node and last non null node
-        int max = 0;
-        Queue<TreeNode> queue = new LinkedList<>();
-        queue.offer(root);
-        while(!queue.isEmpty()){
-            int size = queue.size();
-            ArrayList<TreeNode> tQueue = new ArrayList<>();
-            boolean nonNull = false;
-            for(int i = 0; i < size; i++){
-                TreeNode cur = queue.poll();
-                if(cur != null){
-                    nonNull = true;
-                    tQueue.add(cur.left);
-                    tQueue.add(cur.right);
-                }else{
-                    tQueue.add(null);
-                    tQueue.add(null);
-                }
-            }
-            if(!nonNull) 
-                return max;
-            int l = 0, r = tQueue.size() - 1;
-            while(tQueue.get(l) == null && l < r) l++;
-            while(tQueue.get(r) == null && l < r) r--;
-            
-            max = Math.max(max, r - l + 1);
-
-            for(int i = 0; i < tQueue.size(); i++){
-                queue.offer(tQueue.get(i));
-            }
-        }
-        return max;
-    }
-
-
-	public static void printLevel(TreeNode root) {
-		if (root == null) {
-			return;
+		String ss = ",1,2,,3,4,16,";
+		String[] sp = ss.split(",");
+		System.out.println("size:" + sp.length);
+		for (String sa : sp) {
+			System.out.println(sa);
 		}
-		LinkedList queue = new LinkedList();
-		queue.add(root);
-		TreeNode end = root;
-		int num = 0;
-		while (queue.size() != 0) {
-			if (root.left != null) {
-				queue.add(root.left);
-			}
-			if (root.right != null) {
-				queue.add(root.right);
-			}
-			num++;
-			root = (TreeNode) queue.poll();
-			if (root == end) {
-				System.out.println(num);
-				end = (TreeNode) queue.getLast();
-				num = 0;
-			}
-
-		}
+		Arrays.asList(sp).stream().filter(Objects::nonNull).filter(f->!f.isBlank()).forEach(System.out::println);
+		List<String> forbiden = Arrays.asList("company", "store", "shop","shop");
+		forbiden.forEach(System.out::println);
+		Set<String> fSet = new HashSet<>(forbiden);
+		fSet.forEach(System.out::println);
 	}
 }
