@@ -1,4 +1,4 @@
-package com.careerup.pinterest;
+package com.careerup.pins;
 
 /*
  * ShortestHikingDistance

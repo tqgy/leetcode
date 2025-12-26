@@ -1,4 +1,4 @@
-package com.careerup.pinterest;
+package com.careerup.pins;
 
 import java.util.*;
 
@@ -75,7 +75,7 @@ public class CommonAds {
             int fb = freq.get(b);
             if (fa != fb)
                 return fa - fb; // min‑heap by frequency
-            return a.compareTo(b); 
+            return b.compareTo(a); // reverse lexicographical
         });
 
         for (String ad : freq.keySet()) {
@@ -87,6 +87,7 @@ public class CommonAds {
         List<String> res = new ArrayList<>();
         while (!pq.isEmpty())
             res.add(pq.poll());
+        Collections.reverse(res);
         return res;
     }
 

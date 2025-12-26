@@ -1,4 +1,4 @@
-package com.careerup.pinterest;
+package com.careerup.pins;
 
 /**
  * Computes the minimum number of subsequences from a source string required

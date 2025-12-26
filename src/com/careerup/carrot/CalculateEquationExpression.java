@@ -1,4 +1,4 @@
-package com.careerup.instacart;
+package com.careerup.carrot;
 
 import java.util.*;
 

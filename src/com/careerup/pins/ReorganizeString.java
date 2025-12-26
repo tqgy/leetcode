@@ -1,4 +1,4 @@
-package com.careerup.pinterest;
+package com.careerup.pins;
 
 /**
  * Given a string s, rearrange the characters of s so that any two adjacent

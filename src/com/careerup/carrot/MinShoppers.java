@@ -1,4 +1,4 @@
-package com.careerup.instacart;
+package com.careerup.carrot;
 
 import java.util.*;
 
@@ -43,7 +43,7 @@ class MinShoppers {
 
     private double getAverageWaitTime(int[][] orders, int shoppers) {
         PriorityQueue<Integer> pq = new PriorityQueue<>(); // min heap to store the end time of each shopper
-        int totalWait = 0, start = orders[0][1];
+        int totalWait = 0, start = 0;
 
         for (int i = 0; i < orders.length; i++) {
             int duration = orders[i][0];
@@ -72,6 +72,7 @@ class MinShoppers {
     public double averageWaitingTime(int[][] customers) {
         if(customers == null || customers.length == 0 || customers[0].length == 0) 
             return 0.0;
+        // need check whether it's ordered
         double total = 0;
         int preFinish = 0;
         for(int i = 0; i < customers.length; i++){
