@@ -1,6 +1,8 @@
 package com.carrerup.pratice;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -182,10 +184,60 @@ public class Practice {
 		for (String sa : sp) {
 			System.out.println(sa);
 		}
-		Arrays.asList(sp).stream().filter(Objects::nonNull).filter(f->!f.isBlank()).forEach(System.out::println);
-		List<String> forbiden = Arrays.asList("company", "store", "shop","shop");
+		Arrays.asList(sp).stream().filter(Objects::nonNull).filter(f -> !f.isBlank()).forEach(System.out::println);
+		List<String> forbiden = Arrays.asList("company", "store", "shop", "shop");
 		forbiden.forEach(System.out::println);
 		Set<String> fSet = new HashSet<>(forbiden);
 		fSet.forEach(System.out::println);
+
+		List<String> fileLines = Files.readAllLines(Paths.get("/Users/tqgynn/Desktop/test.txt"));
+		fileLines.forEach(System.out::println);
+		Set<Integer> sset = new HashSet<>();
+		StringBuilder result = new StringBuilder();
+		List<String> pass = new ArrayList<>();
+		Map<Integer, int[]> map = new HashMap<>();
+		List<List<String>> blocks = new ArrayList<>();
+		int cur = -1, x = -1, y = -1;
+		for (int i = 0; i < fileLines.size(); i++) {
+			System.out.println(fileLines.get(i));
+			String line = fileLines.get(i);
+			if (line.matches("\\d+")) {
+				System.out.println("It's a number: " + line);
+				cur = Integer.parseInt(line);
+				if (sset.add(cur)) {
+					System.out.println("Added: " + line);
+				} else {
+					System.out.println("Duplicate: " + line);
+					// break;
+				}
+			} else if (line.startsWith("[")) {
+				System.out.println("It's a list: " + line);
+				String[] ssp = line.substring(1, line.length() - 1).split(",");
+				Arrays.stream(ssp).forEach(System.out::println);
+				x = Integer.parseInt(ssp[0].trim());
+				y = Integer.parseInt(ssp[1].trim());
+				System.out.println("x: " + x + ", y: " + y);
+				map.put(cur, new int[] { x, y });
+			} else if (line.isBlank()) {
+				System.out.println("It's a blank line: " + line);
+				for (var entry : map.entrySet()) {
+					System.out.println(entry.getKey() + " : " + entry.getValue()[0] + ", " + entry.getValue()[1]);
+					// String sss = new
+					// String(pass.get(entry.getValue()[1]).charAt(entry.getValue()[0]) + "");
+					// result.insert(entry.getKey(), sss);
+				}
+				blocks.add(pass);
+				cur = -1;
+				x = -1;
+				y = -1;
+				pass.clear();
+			} else {
+				System.out.println("It's a string: " + line);
+				pass.add(0, line);
+			}
+		}
+		blocks.forEach(b -> b.forEach(System.out::println));
+
+		System.out.println(result.toString());
 	}
 }
