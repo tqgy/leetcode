@@ -37,7 +37,7 @@ public class CountSubArrays {
             currentSum += nums[right];
 
             // Shrink from the left while the current window's score >= k
-            while (left <= right && currentSum * (right - left + 1L) >= k) {
+            while (left <= right && currentSum * (right - left + 1) >= k) {
                 currentSum -= nums[left];
                 left++;
             }
@@ -62,7 +62,7 @@ public class CountSubArrays {
             long sum = 0L;
             for (int j = i; j < n; j++) {
                 sum += nums[j];
-                if (sum * (j - i + 1L) < k) cnt++;
+                if (sum * (j - i + 1) < k) cnt++;
             }
         }
         return cnt;
