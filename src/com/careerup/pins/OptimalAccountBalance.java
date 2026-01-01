@@ -58,34 +58,44 @@ public class OptimalAccountBalance {
      * @return minimum number of transactions needed to settle all debts from {@code start}
      */
     public static int settle(List<Integer> debts, int start) {
-        // all debts processed
+        // Base case: all debts processed
         if (start == debts.size()) {
             return 0;
         }
-        // if current balance already settled, move on
-        if (debts.get(start) == 0) {
+        
+        // Skip already settled balances
+        int currentDebt = debts.get(start);
+        if (currentDebt == 0) {
             return settle(debts, start + 1);
         }
 
         int minTransfers = Integer.MAX_VALUE;
-        // try to settle debts[start] with any opposite-signed balance later in the list
+        
+        // Try to settle current debt with any opposite-signed balance later in the list
         for (int i = start + 1; i < debts.size(); i++) {
-            if (debts.get(start) * debts.get(i) < 0) {
-                int originalStart = debts.get(start);
-                int originalI = debts.get(i);
-                int delta = Math.min(Math.abs(originalI), Math.abs(originalStart));
+            int otherDebt = debts.get(i);
+            
+            // Only pair opposite signs (one owes, one is owed)
+            if (currentDebt * otherDebt < 0) {
+                // Calculate the delta (minimum of the two absolute values)
+                int delta = Math.min(Math.abs(currentDebt), Math.abs(otherDebt));
+                
+                // Save original values for backtracking
+                int originalCurrent = currentDebt;
+                int originalOther = otherDebt;
+                
+                // Apply transaction: reduce both debts by the delta
+                // If current is positive (owed money), it decreases; if negative (owes), it increases
+                debts.set(start, currentDebt - (currentDebt > 0 ? delta : -delta));
+                debts.set(i, otherDebt - (otherDebt > 0 ? delta : -delta));
 
-                // apply one transaction between start and i
-                debts.set(start, originalStart + (originalStart > 0 ? -delta : delta));
-                debts.set(i, originalI + (originalI > 0 ? -delta : delta));
-
-                // recurse to settle the remainder
+                // Recurse to settle remaining debts (move to next index after trying this pairing)
                 int transfers = 1 + settle(debts, start + 1);
                 minTransfers = Math.min(minTransfers, transfers);
 
-                // undo (backtrack)
-                debts.set(start, originalStart);
-                debts.set(i, originalI);
+                // Backtrack: restore original values
+                debts.set(start, originalCurrent);
+                debts.set(i, originalOther);
             }
         }
         return minTransfers;
@@ -121,15 +131,20 @@ public class OptimalAccountBalance {
 
         List<int[]> result = new ArrayList<>();
         while (!debtors.isEmpty() && !creditors.isEmpty()) {
-            int[] d = debtors.peekFirst();
-            int[] c = creditors.peekFirst();
-            int give = Math.min(d[1], c[1]);
-            // debtor pays creditor
-            result.add(new int[] { d[0], c[0], give });
-            d[1] -= give;
-            c[1] -= give;
-            if (d[1] == 0) debtors.removeFirst();
-            if (c[1] == 0) creditors.removeFirst();
+            int[] debtor = debtors.peekFirst();   // [personId, amountOwed]
+            int[] creditor = creditors.peekFirst(); // [personId, amountOwed]
+            int transferAmount = Math.min(debtor[1], creditor[1]);
+            
+            // Create transaction: debtor pays creditor
+            result.add(new int[] { debtor[0], creditor[0], transferAmount });
+            
+            // Update remaining amounts
+            debtor[1] -= transferAmount;
+            creditor[1] -= transferAmount;
+            
+            // Remove fully settled entries
+            if (debtor[1] == 0) debtors.removeFirst();
+            if (creditor[1] == 0) creditors.removeFirst();
         }
         return result;
     }
@@ -150,12 +165,17 @@ public class OptimalAccountBalance {
      * @param txs list of transactions where each transaction is {from, to, amount}
      * @return human readable representation like "(0->1:5), (2->1:5)"
      */
-    private static String format(List<int[]> txs) {
+    private static String format(List<int[]> transactions) {
+        if (transactions.isEmpty()) {
+            return "[]";
+        }
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < txs.size(); i++) {
-            int[] t = txs.get(i);
-            sb.append(String.format("(%d->%d:%d)", t[0], t[1], t[2]));
-            if (i < txs.size() - 1) sb.append(", ");
+        for (int i = 0; i < transactions.size(); i++) {
+            int[] tx = transactions.get(i);
+            sb.append(String.format("(%d->%d:%d)", tx[0], tx[1], tx[2]));
+            if (i < transactions.size() - 1) {
+                sb.append(", ");
+            }
         }
         return sb.toString();
     }
