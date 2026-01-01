@@ -19,19 +19,15 @@ import java.util.*;
  * ordering constraints derived from every Color.
  * 
  * Approach:
- * 1. Identify all unique Sizes and map each to an integer ID [0, N-1].
- * 2. Build a Directed Graph using an adjacency list (List of Lists of Integers).
- * 3. Use Topological Sort (DFS-based) with an int[] array for state tracking.
- * 4. Detect cycles: If a cycle exists, no valid order exists.
+ * 1. Identify all unique Sizes (Nodes in our graph).
+ * 2. Build a Directed Graph where an edge A -> B means "Size A must come before Size B".
+ * 3. Use Topological Sort (DFS-based) to find a linear ordering of the nodes.
+ * 4. Detect cycles: We use two sets, 'visiting' (recursion stack) and 'visited' (fully processed),
+ *    to detect cycles and avoid re-processing nodes.
  * 
- * This implementation uses primitive arrays for state management to avoid Map overhead during traversal.
+ * The class also extracts the unique Colors in their order of first appearance.
  */
 public class ColorSizeOrder {
-
-    // Constants for DFS State
-    private static final int UNVISITED = 0;
-    private static final int VISITING = 1; // Currently in recursion stack
-    private static final int VISITED = 2;  // Fully processed
 
     /**
      * Extracts unique colors from the input list, preserving the order of their first appearance.
@@ -55,7 +51,7 @@ public class ColorSizeOrder {
     /**
      * Builds a global ordering of sizes that respects all per-color constraints using Topological Sort.
      * 
-     * Time Complexity: O(V + E), where V is the number of unique sizes and E is the total number of constraints.
+     * Time Complexity: O(V + E), where V is the number of unique sizes and E is the total number of constraints (adjacent pairs in input).
      * Space Complexity: O(V + E) to store the graph and recursion stack.
      * 
      * @param colorSizePairs List of [Color, Size] pairs.
@@ -63,51 +59,48 @@ public class ColorSizeOrder {
      * @throws IllegalStateException if a cycle is detected (conflicting constraints).
      */
     private static List<String> resolveSizeOrder(List<String[]> colorSizePairs) {
-        // Step 1: Collect unique sizes and map them to integers
-        Set<String> uniqueSizes = new LinkedHashSet<>();
-        // Group input by color to easily extract sequential pairs later
+        // Step 1: Group sizes by color to extract constraints
+        // Map: Color -> List of Sizes for that color
         Map<String, List<String>> colorToSizesMap = new LinkedHashMap<>();
-
         for (String[] pair : colorSizePairs) {
             String color = pair[0];
             String size = pair[1];
-            uniqueSizes.add(size);
             colorToSizesMap.computeIfAbsent(color, k -> new ArrayList<>()).add(size);
         }
 
-        int numSizes = uniqueSizes.size();
-        Map<String, Integer> sizeToIndex = new HashMap<>();
-        String[] indexToSize = new String[numSizes];
+        // Step 2: Build the graph
+        // Nodes: All unique sizes
+        // Edges: Derived from sequential pairs in each color's list
+        Set<String> allSizes = new LinkedHashSet<>();
+        Map<String, Set<String>> adjacencyList = new HashMap<>();
         
-        int index = 0;
-        for (String size : uniqueSizes) {
-            sizeToIndex.put(size, index);
-            indexToSize[index] = size;
-            index++;
+        // Initialize nodes
+        for (List<String> sizes : colorToSizesMap.values()) {
+            allSizes.addAll(sizes);
+        }
+        for (String size : allSizes) {
+            adjacencyList.put(size, new HashSet<>());
         }
 
-        // Step 2: Build the graph using integer IDs
-        List<List<Integer>> adj = new ArrayList<>(numSizes);
-        for (int i = 0; i < numSizes; i++) {
-            adj.add(new ArrayList<>());
-        }
-
+        // Add edges
         for (List<String> sizes : colorToSizesMap.values()) {
             for (int i = 0; i < sizes.size() - 1; i++) {
-                int fromIdx = sizeToIndex.get(sizes.get(i));
-                int toIdx = sizeToIndex.get(sizes.get(i + 1));
-                adj.get(fromIdx).add(toIdx);
+                String fromSize = sizes.get(i);
+                String toSize = sizes.get(i + 1);
+                // "fromSize" must come before "toSize"
+                adjacencyList.get(fromSize).add(toSize);
             }
         }
 
         // Step 3: Perform DFS Topological Sort
-        // visited array stores state: 0=UNVISITED, 1=VISITING, 2=VISITED
-        int[] visited = new int[numSizes];
         List<String> topologicalOrder = new ArrayList<>();
+        Set<String> visited = new HashSet<>();  // Nodes fully processed
+        Set<String> visiting = new HashSet<>(); // Nodes currently in recursion stack (for cycle detection)
 
-        for (int i = 0; i < numSizes; i++) {
-            if (visited[i] == UNVISITED) {
-                if (!dfs(i, adj, visited, topologicalOrder, indexToSize)) {
+        // Iterate over all nodes to handle disconnected components
+        for (String size : allSizes) {
+            if (!visited.contains(size)) {
+                if (!dfs(size, adjacencyList, visiting, visited, topologicalOrder)) {
                     throw new IllegalStateException("Cycle detected in size constraints. No valid order exists.");
                 }
             }
@@ -119,34 +112,40 @@ public class ColorSizeOrder {
     }
 
     /**
-     * Depth First Search helper using integer indices and array-based state.
+     * Depth First Search helper for Topological Sort.
      * 
-     * @param u Current node index.
-     * @param adj Adjacency list.
-     * @param visited Array tracking visitor state.
-     * @param resultList List to collect result strings.
-     * @param indexToSize Mapping from index back to size String.
+     * @param node The current size node being visited.
+     * @param adjacencyList The graph adjacency list.
+     * @param visiting Set of nodes currently in the recursion stack (ancestors).
+     * @param visited Set of nodes that have been fully processed.
+     * @param resultList The list to collect nodes in reverse topological order.
      * @return true if successful, false if a cycle is detected.
      */
-    private static boolean dfs(int u, List<List<Integer>> adj, int[] visited, 
-                               List<String> resultList, String[] indexToSize) {
+    private static boolean dfs(String node, Map<String, Set<String>> adjacencyList, 
+                               Set<String> visiting, Set<String> visited, List<String> resultList) {
         
-        visited[u] = VISITING;
+        // If we see a node that is currently in the recursion stack, it's a cycle.
+        if (visiting.contains(node)) {
+            return false;
+        }
+        // If we already fully processed this node, skip it.
+        if (visited.contains(node)) {
+            return true;
+        }
 
-        for (int v : adj.get(u)) {
-            if (visited[v] == VISITING) {
-                // Cycle detected
+        // Mark as currently visiting
+        visiting.add(node);
+
+        for (String neighbor : adjacencyList.get(node)) {
+            if (!dfs(neighbor, adjacencyList, visiting, visited, resultList)) {
                 return false;
-            }
-            if (visited[v] == UNVISITED) {
-                if (!dfs(v, adj, visited, resultList, indexToSize)) {
-                    return false;
-                }
             }
         }
 
-        visited[u] = VISITED;
-        resultList.add(indexToSize[u]);
+        // Mark as fully visited and add to result
+        visiting.remove(node);
+        visited.add(node);
+        resultList.add(node);
         return true;
     }
 
