@@ -42,6 +42,7 @@ public class SmallestRectangleContain1 {
 
         dfs(image, x, y);
 
+        // DFS uses [inclusive, inclusive] bounds: both min and max are actual indices with black pixels
         return (maxRow - minRow + 1) * (maxCol - minCol + 1);
     }
 
@@ -90,87 +91,100 @@ public class SmallestRectangleContain1 {
         int rows = grid.length;
         int cols = grid[0].length;
         
-        // Find the left boundary: binary search in range [0, y]
-        int minCol = searchColumnBoundary(grid, 0, y, 0, rows, true);
+        // Find the left boundary: leftmost column with a black pixel
+        int minCol = findLeftBoundary(grid, 0, y, 0, rows);
         
-        // Find the right boundary: binary search in range [y + 1, cols]
-        int maxCol = searchColumnBoundary(grid, y + 1, cols, 0, rows, false);
+        // Find the right boundary: rightmost column with a black pixel
+        int maxCol = findRightBoundary(grid, y, cols - 1, 0, rows);
         
-        // Find the top boundary: binary search in range [0, x], constrained by min/max cols
-        int minRow = searchRowBoundary(grid, 0, x, minCol, maxCol, true);
+        // Find the top boundary: topmost row with a black pixel
+        int minRow = findTopBoundary(grid, 0, x, minCol, maxCol + 1);
         
-        // Find the bottom boundary: binary search in range [x + 1, rows], constrained by min/max cols
-        int maxRow = searchRowBoundary(grid, x + 1, rows, minCol, maxCol, false);
+        // Find the bottom boundary: bottommost row with a black pixel
+        int maxRow = findBottomBoundary(grid, x, rows - 1, minCol, maxCol + 1);
         
-        return (maxCol - minCol) * (maxRow - minRow);
+        // Both boundaries are inclusive, so add 1 to get dimensions
+        return (maxCol - minCol + 1) * (maxRow - minRow + 1);
     }
 
-    /**
-     * Binary search to find the column boundary.
-     * 
-     * @param grid          The image matrix.
-     * @param start         Start index of column range (inclusive).
-     * @param end           End index of column range (exclusive).
-     * @param top           Top row index to scan.
-     * @param bottom        Bottom row index to scan (exclusive).
-     * @param checkHasBlackPixel If true, we look for the first column that HAS a black pixel (min boundary).
-     *                           If false, we look for the first column that has NO black pixels (max boundary).
-     * @return The column index establishing the boundary.
-     */
-    private static int searchColumnBoundary(char[][] grid, int start, int end, int top, int bottom, boolean checkHasBlackPixel) {
-        while (start != end) {
-            int mid = (start + end) / 2;
-            int row = top;
-            // Scan the column 'mid' to see if it contains any black pixel ('1')
-            while (row < bottom && grid[row][mid] == '0') {
-                ++row;
-            }
-            
-            // If checkHasBlackPixel is true: we want the FIRST column with a black pixel.
-            //   - If current col has black (row < bottom), then the boundary is mid or to the left. (end = mid)
-            //   - If current col is all white, boundary is to the right. (start = mid + 1)
-            //
-            // If checkHasBlackPixel is false: we want the FIRST column that is ALL WHITE after the black region.
-            //   - If current col has black (row < bottom), it's still part of the region, boundary is to the right. (start = mid + 1)
-            //   - If current col is all white, it could be the boundary or boundary is to the left. (end = mid)
-            if (row < bottom == checkHasBlackPixel) {
-                end = mid;
-            } else {
-                start = mid + 1;
+    // Helper: Check if a column contains any black pixel in the given row range
+    private static boolean columnHasBlack(char[][] grid, int col, int topRow, int bottomRow) {
+        for (int r = topRow; r < bottomRow; r++) {
+            if (grid[r][col] == '1') {
+                return true;
             }
         }
-        return start;
+        return false;
     }
 
-    /**
-     * Binary search to find the row boundary.
-     * 
-     * @param grid          The image matrix.
-     * @param start         Start index of row range (inclusive).
-     * @param end           End index of row range (exclusive).
-     * @param left          Left column index to scan.
-     * @param right         Right column index to scan (exclusive).
-     * @param checkHasBlackPixel If true, we look for the first row that HAS a black pixel (min boundary).
-     *                           If false, we look for the first row that has NO black pixels (max boundary).
-     * @return The row index establishing the boundary.
-     */
-    private static int searchRowBoundary(char[][] grid, int start, int end, int left, int right, boolean checkHasBlackPixel) {
-        while (start != end) {
-            int mid = (start + end) / 2;
-            int col = left;
-            // Scan the row 'mid' to see if it contains any black pixel ('1')
-            while (col < right && grid[mid][col] == '0') {
-                ++col;
-            }
-            
-            // Logic mirrors searchColumnBoundary
-            if (col < right == checkHasBlackPixel) {
-                end = mid;
-            } else {
-                start = mid + 1;
+    // Helper: Check if a row contains any black pixel in the given column range
+    private static boolean rowHasBlack(char[][] grid, int row, int leftCol, int rightCol) {
+        for (int c = leftCol; c < rightCol; c++) {
+            if (grid[row][c] == '1') {
+                return true;
             }
         }
-        return start;
+        return false;
+    }
+
+    // Find the leftmost column with a black pixel
+    private static int findLeftBoundary(char[][] grid, int left, int right, int topRow, int bottomRow) {
+        int result = left;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (columnHasBlack(grid, mid, topRow, bottomRow)) {
+                result = mid;
+                right = mid - 1; // Search left for earlier occurrence
+            } else {
+                left = mid + 1; // Search right
+            }
+        }
+        return result;
+    }
+
+    // Find the rightmost column with a black pixel
+    private static int findRightBoundary(char[][] grid, int left, int right, int topRow, int bottomRow) {
+        int result = right;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (columnHasBlack(grid, mid, topRow, bottomRow)) {
+                result = mid;
+                left = mid + 1; // Search right for later occurrence
+            } else {
+                right = mid - 1; // Search left
+            }
+        }
+        return result;
+    }
+
+    // Find the topmost row with a black pixel
+    private static int findTopBoundary(char[][] grid, int top, int bottom, int leftCol, int rightCol) {
+        int result = top;
+        while (top <= bottom) {
+            int mid = top + (bottom - top) / 2;
+            if (rowHasBlack(grid, mid, leftCol, rightCol)) {
+                result = mid;
+                bottom = mid - 1; // Search up for earlier occurrence
+            } else {
+                top = mid + 1; // Search down
+            }
+        }
+        return result;
+    }
+
+    // Find the bottommost row with a black pixel
+    private static int findBottomBoundary(char[][] grid, int top, int bottom, int leftCol, int rightCol) {
+        int result = bottom;
+        while (top <= bottom) {
+            int mid = top + (bottom - top) / 2;
+            if (rowHasBlack(grid, mid, leftCol, rightCol)) {
+                result = mid;
+                top = mid + 1; // Search down for later occurrence
+            } else {
+                bottom = mid - 1; // Search up
+            }
+        }
+        return result;
     }
 
     public static void main(String[] args) {

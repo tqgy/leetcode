@@ -1,7 +1,5 @@
 package com.careerup.pins;
 
-import java.util.*;
-
 /**
  * Problem: You are given a 2D grid that contains mirrors and empty cells. Each
  * cell can be: '.' - empty '/' - 45-degree mirror '\' - 135-degree mirror
