@@ -129,62 +129,54 @@ public class SmallestRectangleContain1 {
 
     // Find the leftmost column with a black pixel
     private static int findLeftBoundary(char[][] grid, int left, int right, int topRow, int bottomRow) {
-        int result = left;
-        while (left <= right) {
+        while (left < right) {
             int mid = left + (right - left) / 2;
             if (columnHasBlack(grid, mid, topRow, bottomRow)) {
-                result = mid;
-                right = mid - 1; // Search left for earlier occurrence
+                right = mid; // Answer is at mid or to the left
             } else {
-                left = mid + 1; // Search right
+                left = mid + 1; // Answer must be to the right
             }
         }
-        return result;
+        return left;
     }
 
     // Find the rightmost column with a black pixel
     private static int findRightBoundary(char[][] grid, int left, int right, int topRow, int bottomRow) {
-        int result = right;
-        while (left <= right) {
-            int mid = left + (right - left) / 2;
+        while (left < right) {
+            int mid = left + (right - left + 1) / 2; // Use upper mid for right boundary
             if (columnHasBlack(grid, mid, topRow, bottomRow)) {
-                result = mid;
-                left = mid + 1; // Search right for later occurrence
+                left = mid; // Answer is at mid or to the right
             } else {
-                right = mid - 1; // Search left
+                right = mid - 1; // Answer must be to the left
             }
         }
-        return result;
+        return left;
     }
 
     // Find the topmost row with a black pixel
     private static int findTopBoundary(char[][] grid, int top, int bottom, int leftCol, int rightCol) {
-        int result = top;
-        while (top <= bottom) {
+        while (top < bottom) {
             int mid = top + (bottom - top) / 2;
             if (rowHasBlack(grid, mid, leftCol, rightCol)) {
-                result = mid;
-                bottom = mid - 1; // Search up for earlier occurrence
+                bottom = mid; // Answer is at mid or above
             } else {
-                top = mid + 1; // Search down
+                top = mid + 1; // Answer must be below
             }
         }
-        return result;
+        return top;
     }
 
     // Find the bottommost row with a black pixel
     private static int findBottomBoundary(char[][] grid, int top, int bottom, int leftCol, int rightCol) {
-        int result = bottom;
-        while (top <= bottom) {
-            int mid = top + (bottom - top) / 2;
+        while (top < bottom) {
+            int mid = top + (bottom - top + 1) / 2; // Use upper mid for bottom boundary
             if (rowHasBlack(grid, mid, leftCol, rightCol)) {
-                result = mid;
-                top = mid + 1; // Search down for later occurrence
+                top = mid; // Answer is at mid or below
             } else {
-                bottom = mid - 1; // Search up
+                bottom = mid - 1; // Answer must be above
             }
         }
-        return result;
+        return top;
     }
 
     public static void main(String[] args) {

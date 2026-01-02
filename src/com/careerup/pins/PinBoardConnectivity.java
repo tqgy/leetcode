@@ -77,6 +77,42 @@ public class PinBoardConnectivity {
         return uf.find(pin1) == uf.find(pin2);
     }
 
+        public static boolean arePinsRelatedBFS(List<List<Integer>> boards, int pin1, int pin2) {
+            // build graph [pin:board]
+            if(pin1 == pin2) 
+                return true;
+            Map<Integer, Set<Integer>> pinBoardMap = new HashMap<>();
+            for(int i = 0; i < boards.size(); i++){
+                for(int j = 0; j < boards.get(i).size(); j++)
+                    pinBoardMap.computeIfAbsent(boards.get(i).get(j), k -> new HashSet<>()).add(i);
+            }
+            // bfs from pin1 to pin2, if met return true, else return false
+            Queue<Integer> queue = new LinkedList<>();
+            Set<Integer> boardSet = new HashSet<>();
+            Set<Integer> pinSet = new HashSet<>();
+            // queue store the board
+            for(int b : pinBoardMap.getOrDefault(pin1, Collections.emptySet())){
+                queue.offer(b);
+            }
+            while(!queue.isEmpty()){
+                int size = queue.size();
+                for(int i = 0; i < size; i++){
+                    int curBoard = queue.poll();
+                    if(boardSet.add(curBoard)){
+                        for(int pin : boards.get(curBoard)){
+                            if(pinSet.add(pin)){
+                                if(pin == pin2)
+                                    return true;
+                                for(int nextBoard : pinBoardMap.getOrDefault(pin, Collections.emptySet()))
+                                    queue.offer(nextBoard);
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
     /**
      * Simple in-file test harness. Runs a variety of small scenarios and prints
      * PASS/FAIL for each case. The tests reflect the current implementation's
@@ -108,7 +144,7 @@ public class PinBoardConnectivity {
             Object expected = c[3];
 
             try {
-                boolean got = arePinsRelated(boards, p1, p2);
+                boolean got = arePinsRelatedBFS(boards, p1, p2);
                 if (expected instanceof Boolean) {
                     boolean exp = (Boolean) expected;
                     if (got == exp) {
