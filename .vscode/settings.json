@@ -3,5 +3,9 @@
     "java.project.explorer.showNonJavaResources": true,
     "files.exclude": {
         "**/*.class": true
-    }
+    },
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "/Users/tqgynn/Downloads/gson-2.8.6.jar"
+    ]
 }
