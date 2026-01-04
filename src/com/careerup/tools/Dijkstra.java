@@ -1,19 +1,19 @@
-package com.carrerup.diagram;
+package com.careerup.tools;
 
 import java.util.*;
 
 public class Dijkstra {
 
     static void dijkstra(ArrayList<ArrayList<int[]>> graph, int src) {
-        int vertexCount = graph.size();
+        int nodeCount = graph.size();
 
         // minDistances[i] stores the shortest distance from sourceVertex to i
-        int[] dist = new int[vertexCount];
+        int[] dist = new int[nodeCount];
         Arrays.fill(dist, Integer.MAX_VALUE);
         dist[src] = 0;
 
         // predecessors[i] stores the previous node in the shortest path to i
-        int[] pre = new int[vertexCount];
+        int[] pre = new int[nodeCount];
         Arrays.fill(pre, -1);
 
         // Min-heap storing {distance, node}, ordered by distance
