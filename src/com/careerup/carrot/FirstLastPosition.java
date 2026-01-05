@@ -1,7 +1,7 @@
 package com.careerup.carrot;
 
 public class FirstLastPosition {
-    
+
     public static int[] searchRange(int[] nums, int target) {
         if(nums == null || nums.length == 0) 
             return new int[]{-1, -1};
@@ -18,29 +18,29 @@ public class FirstLastPosition {
     }
     
     private static int lowerBound(int[] nums, int target){
-        int low = 0, high = nums.length - 1;
-        while(low <= high){
+        int low = 0, high = nums.length;
+        while(low < high){
             int mid = low + (high - low) / 2;
             if(target > nums[mid])
                 low = mid + 1;
             else
                 // lower bound, return low, equals goes to left
-                high = mid - 1;
+                high = mid;
         }
         return low;
     }
     
     private static int upperBound(int[] nums, int target){
-        int low = 0, high = nums.length - 1;
-        while(low <= high){
+        int low = 0, high = nums.length;
+        while(low < high){
             int mid = low + (high - low) / 2;
             // upper bound, return high, equals goes to right
             if(target >= nums[mid])
                 low = mid + 1;
             else
-                high = mid - 1;
+                high = mid;
         }
-        return high;
+        return low - 1;
     }
 
     public static void main(String[] args) {
