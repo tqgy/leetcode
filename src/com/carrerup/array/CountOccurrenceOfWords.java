@@ -1,50 +1,45 @@
-package com.carrerup.hash;
+package com.carrerup.array;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
+import java.io.IOException;
+import java.util.*;
 
-/*
- * 统计一篇给定的 文章中，各个单词出现的次数的算法。用HashMap 来存放出现的单词的次数，Key 是要统计的单词，Value 是单词出现的次数。
- 最后再按照 Key 的升序排列出来。
+/**
+ * Counts the occurrence of each word in a text file.
+ * Uses a HashMap to store count frequencies and a TreeMap to sort the output alphabetically.
  */
 public class CountOccurrenceOfWords {
-	public static void main(String[] args) throws Exception {
-		Map hashMap = null;
-		BufferedReader infile = null;
-		StringTokenizer st = null;
-		String filename = "Test.txt";
-		String string;
-		String file = null;
-		// 打开一篇文章，名字是 Test.txt .
-		infile = new BufferedReader(new FileReader(filename));
-		while ((string = infile.readLine()) != null) {
-			file += string; // 都出整篇文章，存入String中。
-		}
-		hashMap = new HashMap();
-		// 取出文章中的单词，"," "." "!" " " 为各个单词的分界符。
-		st = new StringTokenizer(file, " ,.!");
-		while (st.hasMoreTokens()) {
-			String key = st.nextToken();
-			if (hashMap.get(key) != null) {
-				int value = ((Integer) hashMap.get(key)).intValue();
-				value++;
-				hashMap.put(key, new Integer(value));
-			} else {
-				hashMap.put(key, new Integer(1));
-			}
-		}
-		// 按照单词的字母次序输出。
-		Map treeMap = new TreeMap(hashMap);
-		Set entrySet = treeMap.entrySet();
-		Iterator iterator = entrySet.iterator();
-		while (iterator.hasNext()) {
-			System.out.println(iterator.next());
-		}
-	}
+
+    public static void main(String[] args) {
+        String filename = "Test.txt";
+        Map<String, Integer> wordCounts = new HashMap<>();
+
+        // Use try-with-resources to ensure the file reader is closed automatically
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Split the line into words using non-word characters as delimiters
+                String[] words = line.split("\\W+");
+                
+                for (String word : words) {
+                    if (word.isEmpty()) continue;
+                    
+                    String key = word.toLowerCase(); // Case-insensitive counting
+                    wordCounts.put(key, wordCounts.getOrDefault(key, 0) + 1);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading file: " + e.getMessage());
+            return;
+        }
+
+        // Use a TreeMap to sort counts by word (key)
+        Map<String, Integer> sortedCounts = new TreeMap<>(wordCounts);
+
+        System.out.println("Word Counts (Alphabetical Order):");
+        for (Map.Entry<String, Integer> entry : sortedCounts.entrySet()) {
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
+    }
 }

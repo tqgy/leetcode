@@ -1,4 +1,4 @@
-package com.carrerup.diagram;
+package com.careerup.tools;
 
 import java.util.*;
 
