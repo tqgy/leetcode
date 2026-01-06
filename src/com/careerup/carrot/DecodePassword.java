@@ -7,12 +7,13 @@ import java.util.*;
 
 /**
  * Decodes passwords from a list of string blocks.
- * <p>
- * Input Format: Flattened list of strings where blocks are separated by empty
- * lines. Block Format: - Line 1: Index (integer) - Line 2: Coordinates "[x, y]"
- * where x is column (0-based from left) and y is row (0-based from bottom) -
- * Lines 3+: Grid of characters
- * </p>
+ * Input Format: 
+ * Flattened list of strings where blocks are separated by empty lines. 
+ * Block Format: 
+ *  - Line 1: Index (integer) 
+ *  - Line 2: Coordinates "[x, y]"
+ * where x is column (0-based from left) and y is row (0-based from bottom) 
+ *  - Lines 3+: Grid of characters
  */
 public class DecodePassword {
 
@@ -174,13 +175,19 @@ public class DecodePassword {
                 "[0,0]", "I3KDA4", "XTRYYU", "", "1", "[0,0]", "L3BDA4" // This repeat index is for Part 3 check
         );
         List<List<String>> blocks = parseBlocks(input);
-        List<List<String>> fileBlock = parseBlocks(Files.readAllLines(Path.of("/Users/tqgynn/Desktop/test.txt")));
 
         String part2 = decodePassword(blocks.subList(0, 2)); // Only first two blocks for Part 2
         assertResult("Part 2 (0,1)", "XK", part2);
 
         String part3 = decodeFirstPassword(blocks); // All blocks for Part 3, stops at repeated index 1
         assertResult("Part 3 (First PW)", "XK", part3);
+
+        List<List<String>> fileBlock = parseBlocks(Files.readAllLines(Path.of("/Users/tqgynn/Desktop/test.txt")));
+        String filePart2 = decodePassword(fileBlock.subList(0, 2));
+        assertResult("Part 2 (File)", "XK", filePart2);
+
+        String filePart3 = decodeFirstPassword(fileBlock);
+        assertResult("Part 3 (File)", "XK", filePart3);
     }
 
     private static void testOutOfBounds() {
