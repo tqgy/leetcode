@@ -49,9 +49,8 @@ public class DecodePassword {
         }
 
         /**
-         * Decodes the character at the (x, y) coordinate. The y-coordinate is given
-         * from the BOTTOM (standard Cartesian), but the grid list is stored from
-         * Top-to-Bottom.
+         * Decodes the character at the (x, y) coordinate. The y-coordinate is given from 
+         * the BOTTOM (standard Cartesian), but the grid list is stored from Top-to-Bottom.
          */
         public char decode() {
             if (grid.isEmpty())
@@ -112,8 +111,7 @@ public class DecodePassword {
 
         for (List<String> rawBlock : rawBlocks) {
             Block block = new Block(rawBlock);
-            // If we encounter an index we've already seen, the first password sequence is
-            // complete
+            // If we met an idx we've already seen, first password sequence is complete
             if (seenIndices.contains(block.index)) {
                 break;
             }
