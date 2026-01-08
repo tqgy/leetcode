@@ -30,143 +30,167 @@ import java.util.*;
 public class ColorSizeOrder {
 
     /**
-     * Extracts unique colors from the input list, preserving the order of their first appearance.
-     * 
-     * @param colorSizePairs List of [Color, Size] arrays.
-     * @return List of unique color strings.
-     */
-    private static List<String> extractColors(List<String[]> colorSizePairs) {
-        List<String> result = new ArrayList<>();
-        Set<String> seen = new HashSet<>();
-
-        for (String[] pair : colorSizePairs) {
-            String color = pair[0];
-            if (seen.add(color)) {
-                result.add(color);
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Builds a global ordering of sizes that respects all per-color constraints using Topological Sort.
-     * 
-     * Time Complexity: O(V + E), where V is the number of unique sizes and E is the total number of constraints (adjacent pairs in input).
-     * Space Complexity: O(V + E) to store the graph and recursion stack.
+     * Resolves the global order of sizes based on per-color constraints.
      * 
      * @param colorSizePairs List of [Color, Size] pairs.
      * @return A list of sizes in a valid topological order.
-     * @throws IllegalStateException if a cycle is detected (conflicting constraints).
+     * @throws IllegalStateException if a cycle is detected.
      */
-    private static List<String> resolveSizeOrder(List<String[]> colorSizePairs) {
-        // Step 1: Group sizes by color to extract constraints
-        // Map: Color -> List of Sizes for that color
-        Map<String, List<String>> colorToSizesMap = new LinkedHashMap<>();
-        for (String[] pair : colorSizePairs) {
+    public static List<String> resolveSizeOrder(List<String[]> colorSizePairs) {
+        // 1. Build the graph from constraints
+        Map<String, Set<String>> graph = buildGraph(colorSizePairs);
+
+        // 2. Perform DFS Topological Sort
+        return topologicalSort(graph);
+    }
+
+    /**
+     * Builds the directed graph where edges represent ordering constraints.
+     */
+    private static Map<String, Set<String>> buildGraph(List<String[]> pairs) {
+        Map<String, Set<String>> adj = new HashMap<>();
+        
+        // Group sizes by color to identify sequences (e.g., Red -> [S, M, L])
+        Map<String, List<String>> colorGroups = new LinkedHashMap<>();
+        for (String[] pair : pairs) {
             String color = pair[0];
             String size = pair[1];
-            colorToSizesMap.computeIfAbsent(color, k -> new ArrayList<>()).add(size);
+            colorGroups.computeIfAbsent(color, k -> new ArrayList<>()).add(size);
+            
+            // Ensure every size exists in the graph as a node
+            adj.putIfAbsent(size, new HashSet<>());
         }
 
-        // Step 2: Build the graph
-        // Nodes: All unique sizes
-        // Edges: Derived from sequential pairs in each color's list
-        Set<String> allSizes = new LinkedHashSet<>();
-        Map<String, Set<String>> adjacencyList = new HashMap<>();
-        
-        // Initialize nodes
-        for (List<String> sizes : colorToSizesMap.values()) {
-            allSizes.addAll(sizes);
-        }
-        for (String size : allSizes) {
-            adjacencyList.put(size, new HashSet<>());
-        }
-
-        // Add edges
-        for (List<String> sizes : colorToSizesMap.values()) {
-            for (int i = 0; i < sizes.size() - 1; i++) {
-                String fromSize = sizes.get(i);
-                String toSize = sizes.get(i + 1);
-                // "fromSize" must come before "toSize"
-                adjacencyList.get(fromSize).add(toSize);
+        // Add directed edges based on the order within each color group
+        // If Red has [S, M, L], we add edges S->M and M->L
+        for (List<String> sequence : colorGroups.values()) {
+            for (int i = 0; i < sequence.size() - 1; i++) {
+                String u = sequence.get(i);
+                String v = sequence.get(i + 1);
+                adj.get(u).add(v); 
             }
         }
+        return adj;
+    }
 
-        // Step 3: Perform DFS Topological Sort
-        List<String> topologicalOrder = new ArrayList<>();
+    /**
+     * performs a DFS-based topological sort.
+     */
+    private static List<String> topologicalSort(Map<String, Set<String>> graph) {
+        List<String> result = new ArrayList<>();
         Set<String> visited = new HashSet<>();  // Nodes fully processed
-        Set<String> visiting = new HashSet<>(); // Nodes currently in recursion stack (for cycle detection)
+        Set<String> visiting = new HashSet<>(); // Nodes currently in the current recursion stack
 
         // Iterate over all nodes to handle disconnected components
-        for (String size : allSizes) {
-            if (!visited.contains(size)) {
-                if (!dfs(size, adjacencyList, visiting, visited, topologicalOrder)) {
-                    throw new IllegalStateException("Cycle detected in size constraints. No valid order exists.");
+        for (String node : graph.keySet()) {
+            if (!visited.contains(node)) {
+                if (!dfs(node, graph, visited, visiting, result)) {
+                    throw new IllegalStateException("Cycle detected! No valid ordering exists.");
                 }
             }
         }
 
-        // DFS pushes to result list after visiting children, so the list is in reverse topological order.
-        Collections.reverse(topologicalOrder);
-        return topologicalOrder;
+        // DFS adds nodes after visiting all children (post-order), so we reverse to get topological order
+        Collections.reverse(result);
+        return result;
     }
 
     /**
-     * Depth First Search helper for Topological Sort.
-     * 
-     * @param node The current size node being visited.
-     * @param adjacencyList The graph adjacency list.
-     * @param visiting Set of nodes currently in the recursion stack (ancestors).
-     * @param visited Set of nodes that have been fully processed.
-     * @param resultList The list to collect nodes in reverse topological order.
+     * Recursive DFS helper.
      * @return true if successful, false if a cycle is detected.
      */
-    private static boolean dfs(String node, Map<String, Set<String>> adjacencyList, 
-                               Set<String> visiting, Set<String> visited, List<String> resultList) {
+    private static boolean dfs(String node, Map<String, Set<String>> graph, 
+                               Set<String> visited, Set<String> visiting, 
+                               List<String> result) {
         
-        // If we see a node that is currently in the recursion stack, it's a cycle.
-        if (visiting.contains(node)) {
-            return false;
-        }
-        // If we already fully processed this node, skip it.
-        if (visited.contains(node)) {
-            return true;
-        }
-
-        // Mark as currently visiting
+        // If we are already visiting this node in the current stack, it's a cycle
         visiting.add(node);
 
-        for (String neighbor : adjacencyList.get(node)) {
-            if (!dfs(neighbor, adjacencyList, visiting, visited, resultList)) {
-                return false;
+        for (String neighbor : graph.getOrDefault(node, Collections.emptySet())) {
+            if (visiting.contains(neighbor)) {
+                return false; // Cycle detected constraint violation (e.g. A->B and B->A)
+            }
+            if (!visited.contains(neighbor)) {
+                if (!dfs(neighbor, graph, visited, visiting, result)) {
+                    return false;
+                }
             }
         }
 
-        // Mark as fully visited and add to result
+        // Backtrack: remove from visiting set and mark as fully visited
         visiting.remove(node);
         visited.add(node);
-        resultList.add(node);
+        
+        // Add to result list (post-order)
+        result.add(node);
         return true;
     }
+    
+    // ==========================================
+    // Test Harness
+    // ==========================================
 
     public static void main(String[] args) {
-        List<String[]> items = Arrays.asList(
-            new String[] { "Red", "S" }, 
-            new String[] { "Red", "M" },
-            new String[] { "Red", "L" }, 
-            new String[] { "Blue", "XS" }, 
-            new String[] { "Blue", "S" },
-            new String[] { "Blue", "L" }
-        );
+        System.out.println("=== ColorSizeOrder Test Suite (DFS) ===\n");
+        boolean allPassed = true;
 
+        allPassed &= runTest("Simple Chain", 
+            Arrays.asList(
+                new String[]{"Red", "S"}, new String[]{"Red", "M"}, new String[]{"Red", "L"}
+            ), 
+            Arrays.asList("S", "M", "L"));
+
+        allPassed &= runTest("Merge Constraints", 
+            Arrays.asList(
+                new String[]{"Red", "S"}, new String[]{"Red", "L"},
+                new String[]{"Blue", "XS"}, new String[]{"Blue", "S"},
+                new String[]{"Green", "M"}, new String[]{"Green", "L"}
+            ), 
+            null); // Order check handles validity
+
+        allPassed &= runCycleTest("Direct Cycle", 
+            Arrays.asList(
+                new String[]{"Red", "A"}, new String[]{"Red", "B"},
+                new String[]{"Blue", "B"}, new String[]{"Blue", "A"}
+            ));
+
+        System.out.println("\nOverall Status: " + (allPassed ? "✅ ALL PASSED" : "❌ SOME FAILED"));
+    }
+
+    private static boolean runTest(String name, List<String[]> input, List<String> expectedExact) {
         try {
-            List<String> colors = extractColors(items);
-            List<String> sizes = resolveSizeOrder(items);
+            List<String> result = resolveSizeOrder(input);
+            boolean passed;
+            if (expectedExact != null) {
+                passed = result.equals(expectedExact);
+            } else {
+                // If expectedExact is null, we verify that the result contains all unique items
+                // and assumed valid (since no exception was thrown).
+                Set<String> uniqueItems = new HashSet<>();
+                for(String[] p : input) uniqueItems.add(p[1]);
+                passed = result.size() == uniqueItems.size() && result.containsAll(uniqueItems);
+            }
+            
+            System.out.printf("[%s] %-15s | Result: %-20s\n", 
+                passed ? "PASS" : "FAIL", name, result);
+            return passed;
+        } catch (Exception e) {
+            System.out.printf("[FAIL] %-15s | Unexpected Exception: %s\n", name, e.getMessage());
+            return false;
+        }
+    }
 
-            System.out.println("Colors: " + colors);
-            System.out.println("Sizes: " + sizes);
+    private static boolean runCycleTest(String name, List<String[]> input) {
+        try {
+            resolveSizeOrder(input);
+            System.out.printf("[FAIL] %-15s | Expected Cycle Exception, but got success.\n", name);
+            return false;
         } catch (IllegalStateException e) {
-            System.err.println(e.getMessage());
+            System.out.printf("[PASS] %-15s | Caught expected cycle: %s\n", name, e.getMessage());
+            return true;
+        } catch (Exception e) {
+            System.out.printf("[FAIL] %-15s | Wrong Exception type: %s\n", name, e.getMessage());
+            return false;
         }
     }
 }

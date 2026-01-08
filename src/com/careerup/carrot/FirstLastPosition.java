@@ -44,10 +44,41 @@ public class FirstLastPosition {
     }
 
     public static void main(String[] args) {
-        int[] nums = {1, 2, 2, 2, 3, 4, 5};
-        int target = 2;
+        System.out.println("=== FirstLastPosition Test Suite ===\n");
+        boolean allPassed = true;
+
+        // Basic Cases
+        allPassed &= runTest("Basic Multi", new int[]{5, 7, 7, 8, 8, 10}, 8, new int[]{3, 4});
+        allPassed &= runTest("Basic Single", new int[]{5, 7, 7, 8, 8, 10}, 6, new int[]{-1, -1});
+        allPassed &= runTest("All Same", new int[]{2, 2, 2, 2}, 2, new int[]{0, 3});
+
+        // Edge Cases
+        allPassed &= runTest("Empty Array", new int[]{}, 0, new int[]{-1, -1});
+        allPassed &= runTest("Null Array", null, 0, new int[]{-1, -1});
+        allPassed &= runTest("Single Found", new int[]{1}, 1, new int[]{0, 0});
+        allPassed &= runTest("Single Not Found", new int[]{1}, 0, new int[]{-1, -1});
+
+        // Boundary Cases
+        allPassed &= runTest("Start of Array", new int[]{1, 2, 3}, 1, new int[]{0, 0});
+        allPassed &= runTest("End of Array", new int[]{1, 2, 3}, 3, new int[]{2, 2});
+
+        // Negative Cases
+        allPassed &= runTest("Too Small", new int[]{5, 7, 8}, 1, new int[]{-1, -1});
+        allPassed &= runTest("Too Large", new int[]{5, 7, 8}, 10, new int[]{-1, -1});
+        allPassed &= runTest("Gap in Middle", new int[]{5, 8, 10}, 6, new int[]{-1, -1});
+
+        System.out.println("\nOverall Status: " + (allPassed ? "✅ ALL PASSED" : "❌ SOME FAILED"));
+    }
+
+    private static boolean runTest(String name, int[] nums, int target, int[] expected) {
         int[] result = searchRange(nums, target);
-        System.out.println("First position: " + result[0]);
-        System.out.println("Last position: " + result[1]);
+        boolean passed = result[0] == expected[0] && result[1] == expected[1];
+        
+        String resStr = java.util.Arrays.toString(result);
+        String expStr = java.util.Arrays.toString(expected);
+
+        System.out.printf("[%s] %-18s | Target: %-3d | Expected: %-8s | Got: %-8s\n", 
+            passed ? "PASS" : "FAIL", name, target, expStr, resStr);
+        return passed;
     }
 }
