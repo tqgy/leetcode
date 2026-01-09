@@ -44,18 +44,40 @@ import java.util.*;
 public class HTTPAcceptLanguage {
 
     /** Represents one parsed header entry */
-    static class Entry {
-        String tag;     // e.g. "fr-FR", "fr", "*"
-        double q;       // q-factor
-        int index;      // order in header
+    record Entry(String tag, double q, int index) {}
+    // static class Entry {
+    //     String tag;     // e.g. "fr-FR", "fr", "*"
+    //     double q;       // q-factor
+    //     int index;      // order in header
 
-        Entry(String tag, double q, int index) {
-            this.tag = tag;
-            this.q = q;
-            this.index = index;
+    //     Entry(String tag, double q, int index) {
+    //         this.tag = tag;
+    //         this.q = q;
+    //         this.index = index;
+    //     }
+    // }
+
+    /** Parse header into Entry objects */
+    private static List<Entry> parseHeader(String header) {
+        List<Entry> list = new ArrayList<>();
+        String[] parts = header.split(",");
+
+        for (int i = 0; i < parts.length; i++) {
+            String p = parts[i].trim();
+            String[] seg = p.split(";");
+
+            String tag = seg[0].trim();
+            double q = 1.0; // default q-factor
+
+            if (seg.length > 1 && seg[1].startsWith("q=")) {
+                q = Double.parseDouble(seg[1].substring(2));
+            }
+
+            list.add(new Entry(tag, q, i));
         }
+        return list;
     }
-
+    
     /**
      * Main function: parse Accept-Language header and return supported languages
      * in correct preference order.
@@ -111,27 +133,6 @@ public class HTTPAcceptLanguage {
         });
 
         return result;
-    }
-
-    /** Parse header into Entry objects */
-    private static List<Entry> parseHeader(String header) {
-        List<Entry> list = new ArrayList<>();
-        String[] parts = header.split(",");
-
-        for (int i = 0; i < parts.length; i++) {
-            String p = parts[i].trim();
-            String[] seg = p.split(";");
-
-            String tag = seg[0].trim();
-            double q = 1.0; // default q-factor
-
-            if (seg.length > 1 && seg[1].startsWith("q=")) {
-                q = Double.parseDouble(seg[1].substring(2));
-            }
-
-            list.add(new Entry(tag, q, i));
-        }
-        return list;
     }
 
     /** Find the index of the header entry that matched this supported language */

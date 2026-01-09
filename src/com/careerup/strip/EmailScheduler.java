@@ -60,34 +60,36 @@ public class EmailScheduler {
     }
 
     /** Change event: either plan change or renewal */
-    static class Change {
-        String name;
-        String newPlan;   // for plan change
-        Integer extension; // for renewal
-        int day;
+    record Change(String name, String newPlan, Integer extension, int day) {}
+    // static class Change {
+    //     String name;
+    //     String newPlan;   // for plan change
+    //     Integer extension; // for renewal
+    //     int day;
 
-        Change(String name, String newPlan, Integer extension, int day) {
-            this.name = name;
-            this.newPlan = newPlan;
-            this.extension = extension;
-            this.day = day;
-        }
-    }
+    //     Change(String name, String newPlan, Integer extension, int day) {
+    //         this.name = name;
+    //         this.newPlan = newPlan;
+    //         this.extension = extension;
+    //         this.day = day;
+    //     }
+    // }
 
     /** Event to print */
-    static class Event {
-        int day;
-        String type;
-        String name;
-        String plan;
+    record Event(int day, String type, String name, String plan) {}
+    // static class Event {
+    //     int day;
+    //     String type;
+    //     String name;
+    //     String plan;
 
-        Event(int day, String type, String name, String plan) {
-            this.day = day;
-            this.type = type;
-            this.name = name;
-            this.plan = plan;
-        }
-    }
+    //     Event(int day, String type, String name, String plan) {
+    //         this.day = day;
+    //         this.type = type;
+    //         this.name = name;
+    //         this.plan = plan;
+    //     }
+    // }
 
     /**
      * Generate all events for users + changes (plan changes + renewals)

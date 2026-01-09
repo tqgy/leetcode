@@ -86,13 +86,13 @@ public class ShippingCost2 {
      * Automatically detects the pricing structure and applies the correct calculation
      */
     public static int calculateShippingCost(Map<String, Object> order, 
-                                           Map<String, List<Map<String, Object>>> shippingCost) {
+                                           Map<String, Map<String, Map<String, Object>>> shippingCost) {
         // Extract country and items from order
         String country = (String) order.get("country");
         List<Map<String, Object>> items = (List<Map<String, Object>>) order.get("items");
         
         // Get shipping costs for this country
-        List<Map<String, Object>> countryCosts = shippingCost.get(country);
+        Map<String, Map<String, Object>> countryCosts = shippingCost.get(country);
         
         int totalCost = 0;
         
@@ -114,26 +114,27 @@ public class ShippingCost2 {
      * Handles all three parts based on the structure of cost data
      */
     private static int calculateItemCost(String product, int quantity, 
-                                        List<Map<String, Object>> countryCosts) {
+                                        Map<String, Map<String, Object>> countryCosts) {
         // Find the product in shipping costs
-        for (Map<String, Object> costInfo : countryCosts) {
-            if (product.equals(costInfo.get("product"))) {
-                
-                // Part 1: Simple fixed cost (has "cost" field directly)
-                if (costInfo.containsKey("cost")) {
-                    int cost = (int) costInfo.get("cost");
-                    return quantity * cost;
-                }
-                
-                // Part 2 & 3: Tiered pricing (has "costs" list)
-                if (costInfo.containsKey("costs")) {
-                    List<Map<String, Object>> costs = (List<Map<String, Object>>) costInfo.get("costs");
-                    return calculateTieredCost(quantity, costs);
-                }
-            }
+        if (countryCosts == null || !countryCosts.containsKey(product)) {
+            return 0; // Product not found
         }
         
-        return 0; // Product not found
+        Map<String, Object> costInfo = countryCosts.get(product);
+        
+        // Part 1: Simple fixed cost (has "cost" field directly)
+        if (costInfo.containsKey("cost")) {
+            int cost = (int) costInfo.get("cost");
+            return quantity * cost;
+        }
+        
+        // Part 2 & 3: Tiered pricing (has "costs" list)
+        if (costInfo.containsKey("costs")) {
+            List<Map<String, Object>> costs = (List<Map<String, Object>>) costInfo.get("costs");
+            return calculateTieredCost(quantity, costs);
+        }
+        
+        return 0;
     }
     
     /**
@@ -189,16 +190,16 @@ public class ShippingCost2 {
         Map<String, Object> orderCA = createOrder("CA", 20, 5);
         
         // Create shipping cost structure for Part 1
-        Map<String, List<Map<String, Object>>> shippingCost = new HashMap<>();
+        Map<String, Map<String, Map<String, Object>>> shippingCost = new HashMap<>();
         
-        List<Map<String, Object>> usCosts = new ArrayList<>();
-        usCosts.add(createSimpleCost("mouse", 550));
-        usCosts.add(createSimpleCost("laptop", 1000));
+        Map<String, Map<String, Object>> usCosts = new HashMap<>();
+        usCosts.put("mouse", createSimpleCost("mouse", 550));
+        usCosts.put("laptop", createSimpleCost("laptop", 1000));
         shippingCost.put("US", usCosts);
         
-        List<Map<String, Object>> caCosts = new ArrayList<>();
-        caCosts.add(createSimpleCost("mouse", 750));
-        caCosts.add(createSimpleCost("laptop", 1100));
+        Map<String, Map<String, Object>> caCosts = new HashMap<>();
+        caCosts.put("mouse", createSimpleCost("mouse", 750));
+        caCosts.put("laptop", createSimpleCost("laptop", 1100));
         shippingCost.put("CA", caCosts);
         
         // Calculate and verify
@@ -221,20 +222,20 @@ public class ShippingCost2 {
         Map<String, Object> orderCA = createOrder("CA", 20, 5);
         
         // Create shipping cost structure for Part 2
-        Map<String, List<Map<String, Object>>> shippingCost = new HashMap<>();
+        Map<String, Map<String, Map<String, Object>>> shippingCost = new HashMap<>();
         
-        List<Map<String, Object>> usCosts = new ArrayList<>();
-        usCosts.add(createTieredProduct("mouse", 
+        Map<String, Map<String, Object>> usCosts = new HashMap<>();
+        usCosts.put("mouse", createTieredProduct("mouse", 
             Arrays.asList(createTier(0, null, 550, null))));
-        usCosts.add(createTieredProduct("laptop", 
-            Arrays.asList(createTier(0, 2, 1000, null), createTier(3, null, 900, null))));
+        usCosts.put("laptop", createTieredProduct("laptop", 
+            Arrays.asList(createTier(0, 2, 1000, null), createTier(2, null, 900, null))));
         shippingCost.put("US", usCosts);
         
-        List<Map<String, Object>> caCosts = new ArrayList<>();
-        caCosts.add(createTieredProduct("mouse", 
+        Map<String, Map<String, Object>> caCosts = new HashMap<>();
+        caCosts.put("mouse", createTieredProduct("mouse", 
             Arrays.asList(createTier(0, null, 750, null))));
-        caCosts.add(createTieredProduct("laptop", 
-            Arrays.asList(createTier(0, 2, 1100, null), createTier(3, null, 1000, null))));
+        caCosts.put("laptop", createTieredProduct("laptop", 
+            Arrays.asList(createTier(0, 2, 1100, null), createTier(2, null, 1000, null))));
         shippingCost.put("CA", caCosts);
         
         // Calculate and verify
@@ -257,20 +258,20 @@ public class ShippingCost2 {
         Map<String, Object> orderCA = createOrder("CA", 20, 5);
         
         // Create shipping cost structure for Part 3
-        Map<String, List<Map<String, Object>>> shippingCost = new HashMap<>();
+        Map<String, Map<String, Map<String, Object>>> shippingCost = new HashMap<>();
         
-        List<Map<String, Object>> usCosts = new ArrayList<>();
-        usCosts.add(createTieredProduct("mouse", 
+        Map<String, Map<String, Object>> usCosts = new HashMap<>();
+        usCosts.put("mouse", createTieredProduct("mouse", 
             Arrays.asList(createTier(0, null, 550, "incremental"))));
-        usCosts.add(createTieredProduct("laptop", 
-            Arrays.asList(createTier(0, 2, 1000, "fixed"), createTier(3, null, 900, "incremental"))));
+        usCosts.put("laptop", createTieredProduct("laptop", 
+            Arrays.asList(createTier(0, 2, 1000, "fixed"), createTier(2, null, 900, "incremental"))));
         shippingCost.put("US", usCosts);
         
-        List<Map<String, Object>> caCosts = new ArrayList<>();
-        caCosts.add(createTieredProduct("mouse", 
+        Map<String, Map<String, Object>> caCosts = new HashMap<>();
+        caCosts.put("mouse", createTieredProduct("mouse", 
             Arrays.asList(createTier(0, null, 750, "incremental"))));
-        caCosts.add(createTieredProduct("laptop", 
-            Arrays.asList(createTier(0, 2, 1100, "fixed"), createTier(3, null, 1000, "incremental"))));
+        caCosts.put("laptop", createTieredProduct("laptop", 
+            Arrays.asList(createTier(0, 2, 1100, "fixed"), createTier(2, null, 1000, "incremental"))));
         shippingCost.put("CA", caCosts);
         
         // Calculate and verify
