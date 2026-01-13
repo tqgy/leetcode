@@ -1,6 +1,8 @@
 package com.careerup.tools;
 
+import java.util.*;
 import java.util.regex.*;
+import java.util.stream.Collectors;
 
 /**
  * Refined Regex class with constants and test cases based on provided patterns.
@@ -144,5 +146,29 @@ public class Regex {
         String s = "[a,b,n,n,m]";
         s = s.replaceAll("[\\[\\]]", "");
         System.out.println(s);
+        s = "[a,b+n-n*m]";
+        String[] ss = s.split("[\\[\\]\\+\\-\\*\\,]");
+        Arrays.stream(ss).forEach(System.out::println);
+
+        Set<String> set1 = new HashSet<>();
+        set1.add("a");
+        set1.add("b");
+        set1.add("n");
+        set1.add("m");
+        System.out.println(set1);
+
+        Set<String> set2 = new HashSet<>(Arrays.asList("a", "b", "c", "d"));
+        System.out.println("Set 2: " + set2);
+
+        // 1. In-place intersection (modifies set1)
+        Set<String> set1Copy = new HashSet<>(set1);
+        set1Copy.retainAll(set2);
+        System.out.println("Intersection (In-place): " + set1Copy);
+
+        // 2. Stream-based intersection (returns a new set)
+        Set<String> intersection = set1.stream()
+                .filter(set2::contains)
+                .collect(Collectors.toSet());
+        System.out.println("Intersection (Stream): " + intersection);
     }
 }
