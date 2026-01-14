@@ -304,5 +304,29 @@ public class InvertedIndex {
         System.out.println("\n--- Add document back ---");
         idxPM.addDocument(new Document(3, List.of("quick", "brown", "dog")));
         System.out.println(idxPM.phraseQuery("quick brown")); // [1, 3]
+
+
+        Map<String, Set<Integer>> invertedIndex = new HashMap<>();
+        invertedIndex.put("quick", new HashSet<>(Set.of(1, 2)));
+        invertedIndex.put("brown", new HashSet<>(Set.of(1, 3)));
+        invertedIndex.put("fox",   new HashSet<>(Set.of(1, 2)));
+        invertedIndex.put("dog",   new HashSet<>(Set.of(3)));
+
+        System.out.println(invertedIndex);
+        System.out.println(invertedIndex.get("quick"));
+        System.out.println(invertedIndex.getOrDefault("quick", Set.of()));
+
+        invertedIndex.values()
+            .stream()
+            .filter(s -> s.contains(3))
+            .forEach(s -> s.remove(3));
+        invertedIndex.values().removeIf(Set::isEmpty);
+        System.out.println(invertedIndex);
+        invertedIndex.get("quick").remove(2);
+        System.out.println(invertedIndex);
+
+        invertedIndex.entrySet().stream().max(Map.Entry.comparingByKey()).get().getKey();
+        invertedIndex.entrySet().stream().max(Map.Entry.comparingByValue((a,b) -> a.size() - b.size())).get().getKey();
+
     }
 }
