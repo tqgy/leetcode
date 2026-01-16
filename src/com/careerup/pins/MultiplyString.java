@@ -20,9 +20,11 @@ public class MultiplyString {
         }
 
         StringBuilder sb = new StringBuilder();
-        for (int p : result)
-            if (sb.length() != 0 || p != 0)
+        for (int p : result){
+            if (sb.length() != 0 || p != 0){
                 sb.append(p);
+            }
+        }
         return sb.length() == 0 ? "0" : sb.toString();
     }
 

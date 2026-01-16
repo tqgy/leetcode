@@ -105,7 +105,13 @@ public class BankWaitTime {
      */
     public static long waitTimeBinarySearch(int[] times, long M) {
         long left = 0;
-        long right = (long) 1e18; // safe upper bound
+        // long right = (long) 1e18; // safe upper bound
+        long minTime = times[0];
+        for (int t : times)
+            minTime = Math.min(minTime, (long)t);
+        // real upper bound
+        long right = (M + 1) * minTime;
+
 
         while (left < right) {
             long mid = left + (right - left) / 2;

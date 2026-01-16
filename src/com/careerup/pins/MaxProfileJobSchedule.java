@@ -10,7 +10,7 @@ import java.util.TreeMap;
  * jobs, choose a subset of non-overlapping jobs that maximizes total profit.
  * A job that ends at time X allows another job starting at time X.
  *
- * Approach (Greedy + DP via TreeMap):
+ * Approach (DP via TreeMap):
  *  - Create an array of jobs [start, end, profit] and sort by end time.
  *  - Maintain a TreeMap<endTime, maxProfitUntilEnd> where the value at a key
  *    represents the maximum profit achievable using jobs that finish at or

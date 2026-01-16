@@ -39,10 +39,12 @@ public class BusRoutes {
         }
 
         // Trivial case: already at target
-        if (source == target) return 0;
+        if (source == target)
+            return 0;
 
         // If either source or target has no buses, impossible
-        if (!stopToBuses.containsKey(source) || !stopToBuses.containsKey(target)) return -1;
+        if (!stopToBuses.containsKey(source) || !stopToBuses.containsKey(target))
+            return -1;
 
         // BFS queue stores bus indices; visited sets prevent revisiting
         Queue<Integer> queue = new LinkedList<>();
@@ -65,7 +67,8 @@ public class BusRoutes {
 
                 // Explore all stops served by this bus
                 for (int stop : routes[bus]) {
-                    if (stop == target) return busesTaken;
+                    if (stop == target)
+                        return busesTaken;
 
                     // For each unvisited stop, enqueue all unvisited buses that serve it
                     if (!visitedStop.contains(stop)) {

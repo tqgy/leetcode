@@ -45,8 +45,10 @@ public class PinBoardConnectivity {
          * is used — the root of x is simply pointed to the root of y.
          */
         public void union(int x, int y) {
-            if(find(x) != find(y)) {
-                parent.put(find(x), find(y));
+            int px = find(x);
+            int py = find(y);
+            if(px != py) {
+                parent.put(px, py);
             }
         }
     }
@@ -83,24 +85,29 @@ public class PinBoardConnectivity {
                 return true;
             Map<Integer, Set<Integer>> pinBoardMap = new HashMap<>();
             for(int i = 0; i < boards.size(); i++){
-                for(int j = 0; j < boards.get(i).size(); j++)
-                    pinBoardMap.computeIfAbsent(boards.get(i).get(j), k -> new HashSet<>()).add(i);
+                List<Integer> board = boards.get(i);
+                for(int j = 0; j < board.size(); j++){
+                    int pin = board.get(j);
+                    pinBoardMap.computeIfAbsent(pin, k -> new HashSet<>()).add(i);
+                }
             }
             // bfs from pin1 to pin2, if met return true, else return false
             Queue<Integer> queue = new LinkedList<>();
             Set<Integer> boardSet = new HashSet<>();
             Set<Integer> pinSet = new HashSet<>();
             // queue store the board
-            for(int b : pinBoardMap.getOrDefault(pin1, Collections.emptySet())){
-                queue.offer(b);
+            for(int board : pinBoardMap.getOrDefault(pin1, Collections.emptySet())){
+                queue.offer(board);
             }
             while(!queue.isEmpty()){
                 int size = queue.size();
                 for(int i = 0; i < size; i++){
                     int curBoard = queue.poll();
-                    if(boardSet.add(curBoard)){
+                    if(!boardSet.contains(curBoard)){
+                        boardSet.add(curBoard);
                         for(int pin : boards.get(curBoard)){
-                            if(pinSet.add(pin)){
+                            if(!pinSet.contains(pin)){
+                                pinSet.add(pin);
                                 if(pin == pin2)
                                     return true;
                                 for(int nextBoard : pinBoardMap.getOrDefault(pin, Collections.emptySet()))

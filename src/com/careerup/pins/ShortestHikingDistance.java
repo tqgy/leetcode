@@ -14,45 +14,43 @@ package com.careerup.pins;
 
 public class ShortestHikingDistance {
 
-    public static int minimizeMaxDailyDistance(int[] t, int k) {
-        int n = t.length;
+    public static int minimizeMaxDailyDistance(int[] stops, int maxAllowedRests) {
+        int numStops = stops.length;
 
         int left = 0; // minimum possible max distance
-        int right = t[n - 1] - t[0]; // maximum possible max distance
-        int answer = right;
+        int right = stops[numStops - 1] - stops[0]; // maximum possible max distance
 
-        while (left <= right) {
+        while (left < right) {
             int mid = left + (right - left) / 2;
 
-            if (canHike(t, k, mid)) {
-                answer = mid;
-                right = mid - 1; // try smaller max distance
+            if (canHike(stops, maxAllowedRests, mid)) {
+                right = mid; // try smaller max distance
             } else {
                 left = mid + 1; // need larger max distance
             }
         }
 
-        return answer;
+        return left;
     }
 
-    // Check if we can complete the hike with max daily distance <= D
-    private static boolean canHike(int[] t, int k, int D) {
-        int restsUsed = 0;
-        int lastStop = t[0];
+    // Check if we can complete the hike with max daily distance <= maxDistanceLimit
+    private static boolean canHike(int[] stops, int maxAllowedRests, int maxDistanceLimit) {
+        int restsPlaced = 0;
+        int currentPosition = stops[0];
 
-        for (int i = 1; i < t.length; i++) {
-            if (t[i] - lastStop > D) {
+        for (int i = 1; i < stops.length; i++) {
+            if (stops[i] - currentPosition > maxDistanceLimit) {
                 // must rest at previous stop
-                restsUsed++;
-                lastStop = t[i - 1];
+                restsPlaced++;
+                currentPosition = stops[i - 1];
 
                 // if even after resting it's still too far, impossible
-                if (t[i] - lastStop > D)
+                if (stops[i] - currentPosition > maxDistanceLimit)
                     return false;
             }
         }
 
-        return restsUsed <= k;
+        return restsPlaced <= maxAllowedRests;
     }
 
     public static void main(String[] args) {

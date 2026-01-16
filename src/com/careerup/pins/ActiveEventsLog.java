@@ -65,6 +65,9 @@ public class ActiveEventsLog {
         }
 
         List<int[]> result = new ArrayList<>();
+        if (diff.isEmpty()) {
+            return result;
+        }
         int curActive = 0; // Current number of active events
         int lastTime = diff.firstKey(); // Start from the earliest time point
 

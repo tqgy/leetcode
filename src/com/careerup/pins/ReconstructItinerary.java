@@ -35,8 +35,7 @@ public class ReconstructItinerary {
         for (List<String> ticket : tickets) {
             String from = ticket.get(0);
             String to = ticket.get(1);
-            graph.putIfAbsent(from, new PriorityQueue<>());
-            graph.get(from).offer(to);
+            graph.computeIfAbsent(from, k ->new PriorityQueue<>()).offer(to);
         }
 
         List<String> result = new LinkedList<>();
@@ -45,8 +44,8 @@ public class ReconstructItinerary {
     }
 
     private static void dfs(String airport, Map<String, PriorityQueue<String>> graph, List<String> result) {
-        PriorityQueue<String> pq = graph.get(airport);
-        while (pq != null && !pq.isEmpty()) {
+        PriorityQueue<String> pq = graph.getOrDefault(airport, new PriorityQueue<>());
+        while (!pq.isEmpty()) {
             String next = pq.poll();
             dfs(next, graph, result);
         }

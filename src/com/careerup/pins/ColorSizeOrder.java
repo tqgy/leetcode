@@ -104,7 +104,9 @@ public class ColorSizeOrder {
                                List<String> result) {
         
         // If we are already visiting this node in the current stack, it's a cycle
-        visiting.add(node);
+        if(!visiting.add(node)) {
+            return false; // Cycle detected
+        }
 
         for (String neighbor : graph.getOrDefault(node, Collections.emptySet())) {
             if (visiting.contains(neighbor)) {

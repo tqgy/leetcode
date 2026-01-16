@@ -92,6 +92,11 @@ public class Practice {
 		}
 	}
 
+	private static void testArrayToList(String... ss){
+		List<String> list = Arrays.asList(ss);
+		list = List.of(ss);
+	}
+
 	/**
 	 * @param args
 	 * @throws IOException
@@ -184,6 +189,8 @@ public class Practice {
 		for (String sa : sp) {
 			System.out.println(sa);
 		}
+		List<String> spList = Arrays.asList(sp);
+		testArrayToList(sp);
 		Arrays.asList(sp).stream().filter(Objects::nonNull).filter(f -> !f.isBlank()).forEach(System.out::println);
 		List<String> forbiden = Arrays.asList("company", "store", "shop", "shop");
 		forbiden.forEach(System.out::println);

@@ -134,8 +134,8 @@ public class PivotTableAnalyzer {
             } 
         } 
         // streaming manner
-        // return agg.entrySet().stream().max(Map.Entry.comparingByValue()).get().getKey();
-        return bestTs;
+        return agg.entrySet().stream().max(Map.Entry.comparingByValue()).get().getKey();
+        // return bestTs;
     }
 
     // Example usage
