@@ -30,7 +30,7 @@ public class NestedSetEquality {
         }
 
         // Treat object as a list and normalize recursively
-        List<?> list = (List<?>) obj;
+        List<Object> list = (List<Object>) obj;
         List<Object> normalized = new ArrayList<>();
 
         for (Object element : list) {

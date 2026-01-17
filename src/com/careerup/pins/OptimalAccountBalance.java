@@ -36,9 +36,10 @@ public class OptimalAccountBalance {
             int from = transaction[0];
             int to = transaction[1];
             int amount = transaction[2];
-            // payer loses amount, receiver gains amount
-            balanceMap.put(from, balanceMap.getOrDefault(from, 0) - amount);
-            balanceMap.put(to, balanceMap.getOrDefault(to, 0) + amount);
+            // Payer (from) is now owed money -> positive balance
+            // Receiver (to) now owes money -> negative balance
+            balanceMap.put(from, balanceMap.getOrDefault(from, 0) + amount);
+            balanceMap.put(to, balanceMap.getOrDefault(to, 0) - amount);
         }
         // remove entries with zero net balance for cleaner downstream processing
         balanceMap.values().removeIf(balance -> balance == 0);

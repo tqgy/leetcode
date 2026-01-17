@@ -22,11 +22,6 @@ public class SparseMatrix {
         this.data = new HashMap<>();
     }
 
-    // Helper to get (and lazily create) the map for a specific row
-    private Map<Integer, Integer> rowMap(int r) {
-        return data.computeIfAbsent(r, k -> new HashMap<>());
-    }
-
     public void set(int r, int c, int val) {
         if (val == 0) {
             Map<Integer, Integer> row = data.get(r);
@@ -36,7 +31,7 @@ public class SparseMatrix {
                     data.remove(r);
             }
         } else {
-            rowMap(r).put(c, val);
+            data.computeIfAbsent(r, k -> new HashMap<>()).put(c, val);
         }
     }
 
@@ -49,10 +44,10 @@ public class SparseMatrix {
         SparseMatrix result = new SparseMatrix(rows, cols);
 
         // Add all entries from this matrix
-        this.data.forEach((r, rowMap) -> rowMap.forEach((c, val) -> result.set(r, c, val)));
+        this.data.forEach((r, row) -> row.forEach((c, val) -> result.set(r, c, val)));
 
         // Add all entries from the other matrix (accumulate into result)
-        other.data.forEach((r, rowMap) -> rowMap.forEach((c, val) -> result.set(r, c, result.get(r, c) + val)));
+        other.data.forEach((r, row) -> row.forEach((c, val) -> result.set(r, c, result.get(r, c) + val)));
 
         return result;
     }

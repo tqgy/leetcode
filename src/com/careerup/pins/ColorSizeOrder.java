@@ -77,7 +77,7 @@ public class ColorSizeOrder {
      * performs a DFS-based topological sort.
      */
     private static List<String> topologicalSort(Map<String, Set<String>> graph) {
-        List<String> result = new ArrayList<>();
+        List<String> result = new LinkedList<>();
         Set<String> visited = new HashSet<>();  // Nodes fully processed
         Set<String> visiting = new HashSet<>(); // Nodes currently in the current recursion stack
 
@@ -91,7 +91,7 @@ public class ColorSizeOrder {
         }
 
         // DFS adds nodes after visiting all children (post-order), so we reverse to get topological order
-        Collections.reverse(result);
+        // Collections.reverse(result);
         return result;
     }
 
@@ -124,7 +124,7 @@ public class ColorSizeOrder {
         visited.add(node);
         
         // Add to result list (post-order)
-        result.add(node);
+        result.addFirst(node);
         return true;
     }
     

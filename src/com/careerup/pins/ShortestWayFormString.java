@@ -22,21 +22,21 @@ public class ShortestWayFormString {
      * @return minimum number of subsequences or -1 if impossible
      */
     public int ShortestWay(String sourceString, String targetString) {
-        int cnt = 1, sidx = 0, tidx = 0;
-        while(tidx < targetString.length()) {
-            int currentTidx = tidx;
-            if(sidx == sourceString.length()) {
-                cnt++;
-                sidx = 0;
-            }
-            for(int i = 0; i < sourceString.length() & tidx < targetString.length(); i++){
-                if(sourceString.charAt(sidx) == targetString.charAt(tidx)) {
+        if (targetString.isEmpty())
+            return 0;
+        
+        int cnt = 0, tidx = 0;
+        while (tidx < targetString.length()) {
+            int prevTidx = tidx;
+            for (int sidx = 0; sidx < sourceString.length() && tidx < targetString.length(); sidx++) {
+                if (sourceString.charAt(sidx) == targetString.charAt(tidx)) {
                     tidx++;
                 }
-                sidx++;
             }
             
-            if(tidx == currentTidx) return -1;
+            if (tidx == prevTidx)
+                return -1;
+            cnt++;
         }
         return cnt;
     }
@@ -56,8 +56,8 @@ public class ShortestWayFormString {
         Object[][] cases = new Object[][]{
                 {"abc", "abcbc", 2, false},
                 {"abc", "d", -1, false},
-                {"abc", "", 1, false},   // current impl returns 1 for empty target
-                {"", "", 1, false},      // current impl returns 1 when both empty
+                {"abc", "", 0, false},   // correctly returns 0 for empty target
+                {"", "", 0, false},      // correctly returns 0 when both empty
                 {"", "a", -1, false},   // calling with empty source+non-empty target throws
                 {"aaa", "aaaaaa", 2, false},
                 {"xyz", "xxyyzzx", 5, false}
