@@ -9,6 +9,7 @@ public class InvertedIndexTest {
             testBasicSearch();
             testConcurrency();
             testUpdates();
+            testDeleteWithoutForwardIndex();
             System.out.println("ALL INVERTED INDEX TESTS PASSED");
         } catch (Throwable e) {
             e.printStackTrace();
@@ -65,5 +66,19 @@ public class InvertedIndexTest {
         idx.deleteDocument(1);
         if (idx.phraseQuery("b").size() != 1) throw new RuntimeException("Delete failed");
         if (!idx.phraseQuery("a").isEmpty()) throw new RuntimeException("Delete incomplete");
+    }
+
+    private static void testDeleteWithoutForwardIndex() {
+        System.out.println("Running testDeleteWithoutForwardIndex...");
+        InvertedIndex idx = new InvertedIndex();
+        idx.addDocument(new InvertedIndex.Document(1, List.of("a", "b")));
+        idx.addDocument(new InvertedIndex.Document(2, List.of("b", "c")));
+        
+        idx.deleteDocumentWithoutForwardIndex(1);
+        
+        if (!idx.phraseQuery("a").isEmpty()) throw new RuntimeException("Delete (no FwdIdx) failed for word 'a'");
+        // doc 2 still has 'b'
+        if (idx.phraseQuery("b").size() != 1) throw new RuntimeException("Delete (no FwdIdx) failed for word 'b'");
+        if (!idx.phraseQuery("b").contains(2)) throw new RuntimeException("Delete (no FwdIdx) affected wrong doc");
     }
 }

@@ -294,6 +294,41 @@ public class InvertedIndex {
         }
     }
 
+    /**
+     * Deletes a document without using the forward index.
+     * Trade-off:
+     *  - Memory: Saves memory by not determining/storing the forward index (if we chose to remove it entirely).
+     *  - Time: Much slower O(V) vs O(W_doc), where V is total vocabulary size and W_doc is words in the document.
+     * This approach is useful if deletions are very rare and memory is the primary constraint.
+     * 
+     * @param docId the ID of the document to delete
+     */
+    public void deleteDocumentWithoutForwardIndex(int docId) {
+        // Without forwardIndex, we must iterate over the entire vocabulary.
+        // This is O(V), where V is the number of unique words in the index.
+        Iterator<Map.Entry<String, Map<Integer, List<Integer>>>> it = invertedIndex.entrySet().iterator();
+        
+        while (it.hasNext()) {
+            Map.Entry<String, Map<Integer, List<Integer>>> entry = it.next();
+            Map<Integer, List<Integer>> postings = entry.getValue();
+            
+            // Check and remove the docId from this word's posting list
+            // usage of remove(key) returns the value or null, but we just want boolean behavior.
+            // Map.remove(key) returns value.
+            if (postings.remove(docId) != null) {
+                // Optional: Cleanup word if it no longer maps to any documents
+                if (postings.isEmpty()) {
+                    it.remove();
+                }
+            }
+        }
+        
+        // Also remove from forwardIndex to keep state consistent if we are mixing methods,
+        // though strictly this method implies we might not HAVE a forwardIndex.
+        // For this hybrid class, we should keep them in sync.
+        forwardIndex.remove(docId);
+    }
+
     // -----------------------------
     // Demo main method
     // -----------------------------
@@ -356,8 +391,9 @@ public class InvertedIndex {
         invertedIndex.get("quick").remove(2);
         System.out.println(invertedIndex);
 
-        invertedIndex.entrySet().stream().max(Map.Entry.comparingByKey()).get().getKey();
-        invertedIndex.entrySet().stream().max(Map.Entry.comparingByValue((a,b) -> a.size() - b.size())).get().getKey();
-
+        String maxKey = invertedIndex.entrySet().stream().max(Map.Entry.comparingByKey()).get().getKey();
+        String maxKeyByValue = invertedIndex.entrySet().stream().max(Map.Entry.comparingByValue((a,b) -> a.size() - b.size())).get().getKey();
+        System.out.println(maxKey);
+        System.out.println(maxKeyByValue);
     }
 }
