@@ -11,9 +11,12 @@ import java.util.concurrent.*;
 public class InvertedIndex {
 
     // word -> (docId -> list of positions)
-    private final Map<String, Map<Integer, List<Integer>>> invertedIndex = new HashMap<>();
+    // Using ConcurrentHashMap for thread safety during concurrent builds
+    private final Map<String, Map<Integer, List<Integer>>> invertedIndex = new ConcurrentHashMap<>();
+    
     // forward index: docId → word → positions
-    private final Map<Integer, Map<String, List<Integer>>> forwardIndex = new HashMap<>();
+    // This is primarily used for efficient document deletion (retrieving all words for a given docId).
+    private final Map<Integer, Map<String, List<Integer>>> forwardIndex = new ConcurrentHashMap<>();
 
     // -----------------------------
     // Document model
@@ -30,15 +33,15 @@ public class InvertedIndex {
             forwardIndex.putIfAbsent(docId, new HashMap<>());
 
             for (int pos = 0; pos < words.size(); pos++) {
-                String w = words.get(pos);
+                String word = words.get(pos);
 
                 invertedIndex
-                    .computeIfAbsent(w, k -> new HashMap<>())
+                    .computeIfAbsent(word, k -> new HashMap<>())
                     .computeIfAbsent(docId, k -> new ArrayList<>())
                     .add(pos);
 
                 forwardIndex.get(docId)
-                    .computeIfAbsent(w, k -> new ArrayList<>())
+                    .computeIfAbsent(word, k -> new ArrayList<>())
                     .add(pos);
             }
         }
@@ -47,14 +50,19 @@ public class InvertedIndex {
     // -----------------------------
     // Phrase query evaluator
     // -----------------------------
+    /**
+     * Searches for documents containing the specific phrase (words in order).
+     * @param phrase the phrase to search for (e.g., "quick brown")
+     * @return list of document IDs containing the phrase
+     */
     public List<Integer> phraseQuery(String phrase) {
         String[] words = phrase.split("\\s+");
         if (words.length == 0) return List.of();
 
-        // Step 1: get posting lists
+        // Step 1: get posting lists - List<Map<docId, List<positions>>>
         List<Map<Integer, List<Integer>>> postings = new ArrayList<>();
-        for (String w : words) {
-            Map<Integer, List<Integer>> p = invertedIndex.get(w);
+        for (String word : words) {
+            Map<Integer, List<Integer>> p = invertedIndex.get(word);
             if (p == null) return List.of(); // word not found
             postings.add(p);
         }
@@ -78,12 +86,18 @@ public class InvertedIndex {
     }
 
     private boolean matchesPhraseInDoc(int docId, List<Map<Integer, List<Integer>>> postings) {
+        // postings - List<Map<docId, List<positions>>>
+        // Get positions of the first word
         List<Integer> firstWordPositions = postings.get(0).get(docId);
-
+        
+        // For each position of the first word, check if subsequent words align
+        // e.g., for position p of word1, check if word2 has p+1, word3 has p+2, etc.
+        // If any alignment works, return true
         for (int startPos : firstWordPositions) {
             boolean ok = true;
 
             for (int i = 1; i < postings.size(); i++) {
+                // Check if the i-th word has position startPos + i
                 List<Integer> positions = postings.get(i).get(docId);
                 if (!positions.contains(startPos + i)) {
                     ok = false;
@@ -104,6 +118,9 @@ public class InvertedIndex {
         Map<String, Map<Integer, List<Integer>>> inverted,
         Map<Integer, Map<String, List<Integer>>> forward) {}
 
+    // This approach partitions the documents, builds partial indexes in parallel,
+    // and then merges the partial indexes into a global index.
+    // The benefit is reduced contention since each thread works on its own local data.
     public IndexResult buildIndexParallel(
             List<Document> docs, int numThreads) throws InterruptedException {
 
@@ -153,15 +170,15 @@ public class InvertedIndex {
             localForward.putIfAbsent(docId, new HashMap<>());
 
             for (int pos = 0; pos < words.size(); pos++) {
-                String w = words.get(pos);
+                String word = words.get(pos);
 
                 localInverted
-                    .computeIfAbsent(w, k -> new HashMap<>())
+                    .computeIfAbsent(word, k -> new HashMap<>())
                     .computeIfAbsent(docId, k -> new ArrayList<>())
                     .add(pos);
 
                 localForward.get(docId)
-                    .computeIfAbsent(w, k -> new ArrayList<>())
+                    .computeIfAbsent(word, k -> new ArrayList<>())
                     .add(pos);
             }
         }
@@ -178,13 +195,12 @@ public class InvertedIndex {
             String word = entry.getKey();
             Map<Integer, List<Integer>> partialPosting = entry.getValue();
 
-            Map<Integer, List<Integer>> globalPosting =
-                    globalInverted.computeIfAbsent(word, k -> new HashMap<>());
-
             for (var e : partialPosting.entrySet()) {
-                globalPosting
-                    .computeIfAbsent(e.getKey(), k -> new ArrayList<>())
-                    .addAll(e.getValue());
+                int docId = e.getKey();
+                List<Integer> positions = e.getValue();
+                globalInverted.computeIfAbsent(word, k -> new HashMap<>())
+                              .computeIfAbsent(docId, k -> new ArrayList<>())
+                              .addAll(positions);
             }
         }
 
@@ -195,6 +211,14 @@ public class InvertedIndex {
     // -----------------------------
     // Shared state (ConcurrentHashMap) builder
     // -----------------------------
+    /**
+     * Builds the index concurrently using a shared thread-safe map.
+     * This method directly modifies the internal concurrent maps.
+     * 
+     * @param docs list of documents to index
+     * @param numThreads number of threads to use
+     * @throws InterruptedException if interrupted while waiting for completion
+     */
     public void buildIndexConcurrent(List<Document> docs, int numThreads) throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
@@ -204,24 +228,31 @@ public class InvertedIndex {
                 List<String> words = doc.words();
 
                 for (int pos = 0; pos < words.size(); pos++) {
-                    String w = words.get(pos);
+                    String word = words.get(pos);
 
-                    // Inner map must also be concurrent because multiple threads 
-                    // process different docs but the same word.
+                    // Update inverted index: thread-safe computeIfAbsent
+                    // The inner maps must also be concurrent or synchronized if strictly necessary, 
+                    // but for simplified "ConcurrentHashMap" demo usually we rely on CHM's guarantees.
+                    // However, standard CHM doesn't lock the VALUE (the inner map) for subsequent updates.
+                    // Ideally, we use compute() for atomic updates or nested CHM.
                     invertedIndex
-                        .computeIfAbsent(w, k -> new ConcurrentHashMap<>())
-                        .computeIfAbsent(docId, k -> new ArrayList<>())
+                        .computeIfAbsent(word, k -> new ConcurrentHashMap<>())
+                        .computeIfAbsent(docId, k -> Collections.synchronizedList(new ArrayList<>()))
                         .add(pos);
-                    // forward index entry 
+
+                    // Update forward index
                     forwardIndex
                         .computeIfAbsent(docId, k -> new ConcurrentHashMap<>())
-                        .computeIfAbsent(w, k -> Collections.synchronizedList(new ArrayList<>()))
+                        .computeIfAbsent(word, k -> Collections.synchronizedList(new ArrayList<>()))
                         .add(pos);
                 }
             });
         }
 
+        // Shutdown the executor, no more tasks will be submitted, 
+        // but existing tasks will continue to run
         executor.shutdown();
+        // Wait for all threads to finish
         executor.awaitTermination(1, TimeUnit.MINUTES);
     }
 
@@ -230,16 +261,16 @@ public class InvertedIndex {
         List<String> words = doc.words();
 
         for (int pos = 0; pos < words.size(); pos++) {
-            String w = words.get(pos);
+            String word = words.get(pos);
 
             invertedIndex
-                .computeIfAbsent(w, k -> new HashMap<>())
+                .computeIfAbsent(word, k -> new HashMap<>())
                 .computeIfAbsent(docId, k -> new ArrayList<>())
                 .add(pos);
 
             forwardIndex
                 .computeIfAbsent(docId, k -> new HashMap<>())
-                .computeIfAbsent(w, k -> new ArrayList<>())
+                .computeIfAbsent(word, k -> new ArrayList<>())
                 .add(pos);
         }
     }
@@ -250,14 +281,14 @@ public class InvertedIndex {
         if (words == null) return; // doc not found
 
         // Step 2: remove docId from each word's posting list
-        for (String w : words.keySet()) {
-            Map<Integer, List<Integer>> posting = invertedIndex.get(w);
+        for (String word : words.keySet()) {
+            Map<Integer, List<Integer>> posting = invertedIndex.get(word);
             if (posting != null) {
                 posting.remove(docId);
 
                 // optional: clean up empty words
                 if (posting.isEmpty()) {
-                    invertedIndex.remove(w, posting);
+                    invertedIndex.remove(word, posting);
                 }
             }
         }

@@ -1,6 +1,8 @@
 package com.careerup.mango;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.*;
 
 public class ConnectionPool {
@@ -20,6 +22,7 @@ public class ConnectionPool {
 
     // Acquire a connection (blocks if none available)
     public Connection acquire() throws InterruptedException {
+        Connection conn = null;
         lock.lock();
         try {
             while (pool.isEmpty() && !closed) {
@@ -30,17 +33,59 @@ public class ConnectionPool {
             if (closed) {
                 throw new IllegalStateException("Pool is closed");
             }
-            Connection conn = pool.poll();
-            conn.open(); // ensure it's ready
-            return conn;
+            conn = pool.poll();
+            // Mark as in-use before releasing lock to ensure validity
+            if (conn != null) {
+                conn.inUse.set(true);
+            }
         } finally {
             lock.unlock();
         }
+        
+        if (conn != null) {
+            conn.open(); // open outside the lock
+        }
+        return conn;
+    }
+
+    // Acquire with timeout
+    public Connection acquire(long timeout, TimeUnit unit) throws InterruptedException {
+        long nanos = unit.toNanos(timeout);
+        Connection conn = null;
+        lock.lock();
+        try {
+            while (pool.isEmpty() && !closed) {
+                if (nanos <= 0L) {
+                    return null; // timed out
+                }
+                nanos = notEmpty.awaitNanos(nanos);
+            }
+            if (closed) {
+                throw new IllegalStateException("Pool is closed");
+            }
+            conn = pool.poll();
+            if (conn != null) {
+                conn.inUse.set(true);
+            }
+        } finally {
+            lock.unlock();
+        }
+
+        if (conn != null) {
+            conn.open(); // open outside the lock
+        }
+        return conn;
     }
 
     // Release a connection back to pool
     // shouldRebuild = true means the client wants a fresh connection
     public void release(Connection conn, boolean shouldRebuild) {
+        // Prevent double release
+        if (conn == null) return;
+        if (!conn.inUse.compareAndSet(true, false)) {
+            throw new IllegalStateException("Double release detected or connection not in use");
+        }
+
         lock.lock();
         try {
             // if need prevent double release, use atomic reference
@@ -52,9 +97,16 @@ public class ConnectionPool {
                 return;
             }
 
+            // Overflow protection
+            if (pool.size() >= maxSize) {
+                conn.close();
+                return;
+            }
+
             if (shouldRebuild) {
                 conn.close();
                 conn = new Connection(); // rebuild
+                // new connection inUse is false by default
             }
 
             pool.offer(conn);
@@ -84,6 +136,8 @@ public class ConnectionPool {
     // -----------------------------
     public static class Connection {
         private boolean opened = false;
+        // Track usage state for double-release prevention
+        final AtomicBoolean inUse = new AtomicBoolean(false);
 
         public void open() {
             if (!opened) {
