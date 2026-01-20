@@ -306,22 +306,10 @@ public class InvertedIndex {
     public void deleteDocumentWithoutForwardIndex(int docId) {
         // Without forwardIndex, we must iterate over the entire vocabulary.
         // This is O(V), where V is the number of unique words in the index.
-        Iterator<Map.Entry<String, Map<Integer, List<Integer>>>> it = invertedIndex.entrySet().iterator();
-        
-        while (it.hasNext()) {
-            Map.Entry<String, Map<Integer, List<Integer>>> entry = it.next();
-            Map<Integer, List<Integer>> postings = entry.getValue();
-            
-            // Check and remove the docId from this word's posting list
-            // usage of remove(key) returns the value or null, but we just want boolean behavior.
-            // Map.remove(key) returns value.
-            if (postings.remove(docId) != null) {
-                // Optional: Cleanup word if it no longer maps to any documents
-                if (postings.isEmpty()) {
-                    it.remove();
-                }
-            }
-        }
+        invertedIndex.values().removeIf(postings -> {
+            postings.remove(docId);
+            return postings.isEmpty();
+        });
         
         // Also remove from forwardIndex to keep state consistent if we are mixing methods,
         // though strictly this method implies we might not HAVE a forwardIndex.
