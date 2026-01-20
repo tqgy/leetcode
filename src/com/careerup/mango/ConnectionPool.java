@@ -41,7 +41,7 @@ public class ConnectionPool {
         } finally {
             lock.unlock();
         }
-        
+
         if (conn != null) {
             conn.open(); // open outside the lock
         }
@@ -81,7 +81,8 @@ public class ConnectionPool {
     // shouldRebuild = true means the client wants a fresh connection
     public void release(Connection conn, boolean shouldRebuild) {
         // Prevent double release
-        if (conn == null) return;
+        if (conn == null)
+            return;
         if (!conn.inUse.compareAndSet(true, false)) {
             throw new IllegalStateException("Double release detected or connection not in use");
         }
@@ -89,8 +90,8 @@ public class ConnectionPool {
         lock.lock();
         try {
             // if need prevent double release, use atomic reference
-            // if (!conn.inUse.compareAndSet(true, false)) { 
-            //      throw new IllegalStateException("Double release detected"); 
+            // if (!conn.inUse.compareAndSet(true, false)) {
+            // throw new IllegalStateException("Double release detected");
             // }
             if (closed) {
                 conn.close();
@@ -125,6 +126,19 @@ public class ConnectionPool {
                 conn.close();
             }
             pool.clear();
+            /*
+             * We need notEmpty.signalAll() in close() since there might be threads currently
+             * blocked in the acquire() method, waiting for a connection to become available.
+             * 
+             * If we simply set closed = true without signaling:
+             *  - Waiting threads would stay sleeping in notEmpty.await() forever (or until
+             * timeout).
+             *  - They would never wake up to see that closed is now true.
+             * 
+             * By calling signalAll(), we wake up all waiting threads. They re-acquire the
+             * lock, check the loop condition, and see closed is true, allowing them to
+             * throw an exception or handle the shutdown gracefully.
+             */
             notEmpty.signalAll();
         } finally {
             lock.unlock();
@@ -147,7 +161,8 @@ public class ConnectionPool {
         }
 
         public void runCommand(String cmd) {
-            if (!opened) throw new IllegalStateException("Not opened");
+            if (!opened)
+                throw new IllegalStateException("Not opened");
             // simulate running command
         }
 
@@ -159,4 +174,3 @@ public class ConnectionPool {
         }
     }
 }
-
