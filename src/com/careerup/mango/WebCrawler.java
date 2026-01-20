@@ -23,6 +23,14 @@ public class WebCrawler {
 
         // BlockingQueue acts as the frontier for URLs to be processed.
         // It handles thread-safe producer-consumer logic.
+        // Use LinkedBlockingQueue instead of ArrayBlockingQueue to avoid
+        // the need to specify a capacity since it can grow dynamically with the limit
+        // of the heap memory, has a capacity of Integer.MAX_VALUE.
+        //  - LinkedBlockingQueue uses two separate locks: one for put (head) and one for take (tail).
+        //    This allows one thread to add a URL while another thread takes one simultaneously.
+        //  - ArrayBlockingQueue uses a single lock for both adding and removing.
+        //    Producers and consumers block each other, which reduces throughput in
+        //    high-concurrency scenarios like this.
         BlockingQueue<String> queue = new LinkedBlockingQueue<>();
         // If we need depth control, we can calculate the depth of the current URL
         // and only add it to the queue if the depth is less than the maximum depth.
