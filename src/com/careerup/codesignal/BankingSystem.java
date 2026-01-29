@@ -1,7 +1,6 @@
 package com.careerup.codesignal;
 
 import java.util.*;
-import java.util.*;
 
 class BankSystem {
     private Map<Integer, Account> accounts;
@@ -47,8 +46,8 @@ class BankSystem {
 
         for (Account acc : accounts.values()) {
             int totalSpent = acc.getTransactions().stream()
-                    .filter(t -> !t.getType().equals("deposit"))
-                    .mapToInt(Transaction::getAmount)
+                    .filter(t -> !t.type().equals("deposit"))
+                    .mapToInt(Transaction::amount)
                     .sum();
             spenders.add(new Spender(totalSpent, acc.getId()));
         }
@@ -126,24 +125,6 @@ class BankSystem {
         }
     }
 
-    private static class Transaction {
-        private String type;
-        private int amount;
-
-        public Transaction(String type, int amount) {
-            this.type = type;
-            this.amount = amount;
-        }
-
-        public String getType() { return type; }
-        public int getAmount() { return amount; }
-
-        @Override
-        public String toString() {
-            return "(" + type + ", " + amount + ")";
-        }
-    }
-
     private static class Payment {
         private int accountId;
         private String status;
@@ -161,15 +142,9 @@ class BankSystem {
         public int getAmount() { return amount; }
     }
 
-    private static class Spender {
-        private int totalSpent;
-        private int accountId;
+    private record Transaction(String type, int amount) {}
 
-        public Spender(int totalSpent, int accountId) {
-            this.totalSpent = totalSpent;
-            this.accountId = accountId;
-        }
-    }
+    private record Spender(int totalSpent, int accountId) {}
 
     // Demo main method
     public static void main(String[] args) {
@@ -220,7 +195,7 @@ class BankingSystem {
     }
 
     public String cancelPayment(String fromAccount, String date) {
-        scheduledPayments.removeIf(p -> p.getFromAccount().equals(fromAccount) && p.getDate().equals(date));
+        scheduledPayments.removeIf(p -> p.fromAccount().equals(fromAccount) && p.date().equals(date));
         return "Scheduled payment canceled";
     }
 
@@ -229,24 +204,7 @@ class BankingSystem {
     }
 
     // Inner class for scheduled payments
-    private static class ScheduledPayment {
-        private String fromAccount;
-        private String toAccount;
-        private int amount;
-        private String date;
-
-        public ScheduledPayment(String fromAccount, String toAccount, int amount, String date) {
-            this.fromAccount = fromAccount;
-            this.toAccount = toAccount;
-            this.amount = amount;
-            this.date = date;
-        }
-
-        public String getFromAccount() { return fromAccount; }
-        public String getToAccount() { return toAccount; }
-        public int getAmount() { return amount; }
-        public String getDate() { return date; }
-    }
+    private record ScheduledPayment(String fromAccount, String toAccount, int amount, String date) {}
 
     // Main method for testing
     public static void main(String[] args) {

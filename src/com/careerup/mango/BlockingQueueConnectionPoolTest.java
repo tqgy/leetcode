@@ -21,7 +21,6 @@ public class BlockingQueueConnectionPoolTest {
         System.out.println("Running testBasicAcquireRelease...");
         BlockingQueueConnectionPool pool = new BlockingQueueConnectionPool(2);
         BlockingQueueConnectionPool.Connection c1 = pool.acquire();
-        BlockingQueueConnectionPool.Connection c2 = pool.acquire();
         
         // pool is empty
         BlockingQueueConnectionPool.Connection c3 = pool.acquire(100, TimeUnit.MILLISECONDS);

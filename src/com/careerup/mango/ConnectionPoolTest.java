@@ -21,7 +21,6 @@ public class ConnectionPoolTest {
         System.out.println("Running testBasicAcquireRelease...");
         ConnectionPool pool = new ConnectionPool(2);
         ConnectionPool.Connection c1 = pool.acquire();
-        ConnectionPool.Connection c2 = pool.acquire();
         // pool is empty
         ConnectionPool.Connection c3 = pool.acquire(100, TimeUnit.MILLISECONDS);
         if (c3 != null) throw new RuntimeException("Should have timed out");
